@@ -32,18 +32,14 @@ def draw(graph: Graph, filename: str) -> None:
             node_colors.append('red')
             node_sizes.append(200)
             if node.hyperref:
-                labels[label] = node.hyperref.hypertag
+                labels[label] = f"{node.hyperref.hypertag}:{node.hyperref.r}"
             else:
                 labels[label] = label.split('_')[0]
         else:
             node_colors.append('lightblue')
             node_sizes.append(500)
             labels[label] = label
-            
-            if node.hanging:
-                node_colors[-1] = 'yellow'
     
-    # Draw grap
     nx.draw(
         graph._graph,
         pos=pos,
@@ -60,7 +56,6 @@ def draw(graph: Graph, filename: str) -> None:
     
     legend_elements = [
         plt.scatter([], [], c='lightblue', s=100, label='Node'),
-        plt.scatter([], [], c='yellow', s=100, label='Hanging node'),
         plt.scatter([], [], c='red', s=50, label='Hyperedge'),
     ]
     ax.legend(handles=legend_elements, loc='upper right')

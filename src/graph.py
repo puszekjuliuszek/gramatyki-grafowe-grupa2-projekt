@@ -96,14 +96,24 @@ class Graph:
     def find_subgraph_isomorphisms(self, pattern: 'Graph') -> List[dict]:
         """
         Finds all subgraph isomorphisms (pattern matches).
-        
+
         Returns:
             List of dictionaries mapping pattern labels to graph labels
         """
+        def node_match(n1, n2):
+            if n1.get('is_hyper') != n2.get('is_hyper'):
+                return False
+            if n1.get('is_hyper'):
+                e1 = n1.get('hyperedge')
+                e2 = n2.get('hyperedge')
+                if e1 and e2:
+                    return e1.hypertag == e2.hypertag and e1.r == e2.r
+            return True
+
         matcher = nx.algorithms.isomorphism.GraphMatcher(
-            self._graph, 
+            self._graph,
             pattern._graph,
-            node_match=lambda n1, n2: n1.get('is_hyper') == n2.get('is_hyper')
+            node_match=node_match
         )
         return list(matcher.subgraph_isomorphisms_iter())
     
@@ -133,24 +143,25 @@ class Graph:
             
             match = matches[0]
             
-            valid = all(self._graph.has_node(graph_label) for graph_label in match.values())
+            valid = all(self._graph.has_node(graph_label) for graph_label in match.keys())
             if not valid:
                 break
             
             matched_graph = Graph()
-            for pattern_label, graph_label in match.items():
+            for graph_label, pattern_label in match.items():
                 node_data = self._graph.nodes[graph_label]
                 matched_graph._graph.add_node(pattern_label, **node_data)
                 if not node_data.get('is_hyper', False):
                     matched_graph._nodes[pattern_label] = node_data['node']
                 else:
                     matched_graph._hyperedges[pattern_label] = node_data.get('hyperedge')
-            
+
             right = production.get_right_side(matched_graph, lvl=applied_count)
-            
+
+            inv_match = {v: k for k, v in match.items()}
             for label, data in left._graph.nodes(data=True):
                 if data.get('is_hyper', False):
-                    graph_label = match[label]
+                    graph_label = inv_match[label]
                     self.remove_node(graph_label)
             
             for node in right.nodes:

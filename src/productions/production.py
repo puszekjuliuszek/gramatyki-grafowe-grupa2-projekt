@@ -34,13 +34,12 @@ class Production(ABC):
         pass
     
     @abstractmethod
-    def get_right_side(self, left: Graph, lvl: int) -> Graph:
+    def get_right_side(self, left: Graph) -> Graph:
         """
         Returns the right side of the production (transformation result).
         
         Args:
             left: Matched subgraph from the left side (with current values)
-            lvl: Recursion level / application number
             
         Returns:
             Graph representing the transformation result
