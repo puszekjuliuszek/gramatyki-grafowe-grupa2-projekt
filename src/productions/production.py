@@ -37,11 +37,26 @@ class Production(ABC):
     def get_right_side(self, left: Graph) -> Graph:
         """
         Returns the right side of the production (transformation result).
-        
+
         Args:
             left: Matched subgraph from the left side (with current values)
-            
+
         Returns:
             Graph representing the transformation result
         """
         pass
+
+    def filter_match(self, matched_graph: Graph) -> bool:
+        """
+        Additional filter for matched subgraphs.
+
+        Override this method to add custom filtering logic
+        beyond structural isomorphism.
+
+        Args:
+            matched_graph: The matched subgraph
+
+        Returns:
+            True if the match should be accepted, False to reject
+        """
+        return True

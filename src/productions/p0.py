@@ -62,7 +62,7 @@ class P0(Production):
         g.add_edge(HyperEdge((n3, n4), "E"))
         g.add_edge(HyperEdge((n4, n1), "E"))
 
-        g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=0))
+        g.add_edge(HyperEdge((n1, n2, n3, n4), "Q"))
 
         return g
 
@@ -72,7 +72,6 @@ class P0(Production):
 
         Args:
             left: Matched subgraph (with current coordinates)
-            lvl: Recursion level (unused in this production)
 
         Returns:
             Graph with same structure but Q hyperedge changed to r=1
@@ -91,3 +90,10 @@ class P0(Production):
         g.add_edge(HyperEdge(tuple(nodes), "Q", r=1), check_nodes=False)
 
         return g
+
+    def filter_match(self, matched_graph: Graph) -> bool:
+        """Only match Q hyperedges with r=0."""
+        for edge in matched_graph.hyperedges:
+            if edge.hypertag == "Q" and edge.r != 0:
+                return False
+        return True

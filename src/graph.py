@@ -107,7 +107,7 @@ class Graph:
                 e1 = n1.get('hyperedge')
                 e2 = n2.get('hyperedge')
                 if e1 and e2:
-                    return e1.hypertag == e2.hypertag and e1.r == e2.r
+                    return e1.hypertag == e2.hypertag
             return True
 
         matcher = nx.algorithms.isomorphism.GraphMatcher(
@@ -140,23 +140,32 @@ class Graph:
             matches = self.find_subgraph_isomorphisms(left)
             if not matches:
                 break
-            
-            match = matches[0]
-            
-            valid = all(self._graph.has_node(graph_label) for graph_label in match.keys())
-            if not valid:
-                break
-            
-            matched_graph = Graph()
-            for graph_label, pattern_label in match.items():
-                node_data = self._graph.nodes[graph_label]
-                matched_graph._graph.add_node(pattern_label, **node_data)
-                if not node_data.get('is_hyper', False):
-                    matched_graph._nodes[pattern_label] = node_data['node']
-                else:
-                    matched_graph._hyperedges[pattern_label] = node_data.get('hyperedge')
 
-            right = production.get_right_side(matched_graph, lvl=applied_count)
+            match = None
+            matched_graph = None
+            for candidate in matches:
+                valid = all(self._graph.has_node(graph_label) for graph_label in candidate.keys())
+                if not valid:
+                    continue
+
+                candidate_graph = Graph()
+                for graph_label, pattern_label in candidate.items():
+                    node_data = self._graph.nodes[graph_label]
+                    candidate_graph._graph.add_node(pattern_label, **node_data)
+                    if not node_data.get('is_hyper', False):
+                        candidate_graph._nodes[pattern_label] = node_data['node']
+                    else:
+                        candidate_graph._hyperedges[pattern_label] = node_data.get('hyperedge')
+
+                if production.filter_match(candidate_graph):
+                    match = candidate
+                    matched_graph = candidate_graph
+                    break
+
+            if match is None:
+                break
+
+            right = production.get_right_side(matched_graph)
 
             inv_match = {v: k for k, v in match.items()}
             for label, data in left._graph.nodes(data=True):

@@ -58,6 +58,7 @@ Klasa `Graph` jest zbudowana na bibliotece `networkx`. Ponieważ networkx nie ws
 Każda produkcja dziedziczy po klasie `Production` i implementuje dwie metody:
 - `get_left_side()` - wzorzec do dopasowania
 - `get_right_side(left)` - wynik transformacji
+- `filter_match(matched_graph)` - dodatkowe sprawdzanie, czy produkcję można zaaplikować (np. wartość atrybutu krawędzi)
 
 ## Jak testować produkcje
 
