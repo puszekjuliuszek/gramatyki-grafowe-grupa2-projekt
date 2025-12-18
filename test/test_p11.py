@@ -270,7 +270,7 @@ class TestP11Case5_1:
         cnt = self.g.count_nodes()
         assert cnt.normal == 12
         assert cnt.hyper == 13
-
+        assert applied == 0
 
 class TestP11Case5_2:
     "Isomorphic left side, wrong label - hyperedge S has r==1, when S should have r==0"
@@ -321,3 +321,4 @@ class TestP11Case5_2:
         cnt = self.g.count_nodes()
         assert cnt.normal == 12
         assert cnt.hyper == 13
+        assert applied == 0
