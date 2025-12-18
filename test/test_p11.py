@@ -1,0 +1,169 @@
+import pytest
+from pathlib import Path
+
+from node import Node
+from edge import HyperEdge
+from graph import Graph
+from productions.p11 import P11
+from visualization import draw
+
+DRAW_DIR = Path(__file__).parent.parent / "draw"
+
+
+@pytest.fixture(autouse=True)
+def ensure_draw_dir():
+    DRAW_DIR.mkdir(exist_ok=True)
+
+# ok case
+class TestP11Case1:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        n1  = Node(0, 1, "n1")
+        n8  = Node(0.5, 1.5, "n8")
+        n6  = Node(1, 2, "n6")
+        n9  = Node(1.5, 1.5, "n9")
+        n4  = Node(2, 1, "n4")
+        n10 = Node(2, 0.5, "n10")
+        n3  = Node(2, 0, "n3")
+        n11 = Node(1.5, -0.5, "n11")
+        n5  = Node(1, -1, "n5")
+        n12 = Node(0.5, -0.5, "n12")
+        n2  = Node(0, 0, "n2")
+        n7  = Node(0, 0.5, "n7")
+
+        nodes = [n1, n8, n6, n9, n4, n10, n3, n11, n5, n12, n2, n7]
+
+        for n in nodes:
+            self.g.add_node(n)
+
+
+        for i in range(len(nodes)):
+            self.g.add_edge(HyperEdge((nodes[i], nodes[(i + 1) % len(nodes)]), "E", r=0))
+
+        self.g.add_edge(HyperEdge((n1, n6, n4, n3, n5, n2), "S", r=1))
+
+        self.p11 = P11()
+
+    def test_stage0(self):
+        draw(self.g, str(DRAW_DIR / "test11-case1-stage0.png"))
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 12
+        assert cnt.hyper == 13
+
+    def test_stage1(self):
+        applied = self.g.apply(self.p11)
+
+        draw(self.g, str(DRAW_DIR / "test11-case1-stage1.png"))
+
+        assert applied == 1
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 13
+        assert cnt.hyper == 24
+
+        q_edges = [e for e in self.g.hyperedges if e.hypertag == "Q"]
+        assert len(q_edges) == 6
+        assert all(e.r == 0 for e in q_edges)
+
+# not ok - not broken
+class TestP11Case2:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        n1  = Node(0, 1, "n1")
+        n8  = Node(0.5, 1.5, "n8")
+        n6  = Node(1, 2, "n6")
+        n9  = Node(1.5, 1.5, "n9")
+        n4  = Node(2, 1, "n4")
+        n10 = Node(2, 0.5, "n10")
+        n3  = Node(2, 0, "n3")
+        n11 = Node(1.5, -0.5, "n11")
+        n5  = Node(1, -1, "n5")
+        n12 = Node(0.5, -0.5, "n12")
+        n2  = Node(0, 0, "n2")
+        n7  = Node(0, 0.5, "n7")
+
+        nodes = [n1, n8, n6, n9, n4, n10, n3, n11, n5, n12, n2, n7]
+
+        for n in nodes:
+            self.g.add_node(n)
+
+        for i in range(len(nodes)):
+            r = 0 if i != 0 else 1 # not broken
+            self.g.add_edge(
+                HyperEdge((nodes[i], nodes[(i + 1) % len(nodes)]), "E", r=r)
+            )
+
+        self.g.add_edge(HyperEdge((n1, n6, n4, n3, n5, n2), "S", r=1))
+
+        self.p11 = P11()
+
+    def test_stage0(self):
+        draw(self.g, str(DRAW_DIR / "test11-case2-stage0.png"))
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 12
+        assert cnt.hyper == 13
+
+    def test_stage1(self):
+        applied = self.g.apply(self.p11)
+
+        draw(self.g, str(DRAW_DIR / "test11-case2-stage1.png"))
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 12
+        assert cnt.hyper == 13
+
+
+# not ok - center r == 0
+class TestP11Case3:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        n1  = Node(0, 1, "n1")
+        n8  = Node(0.5, 1.5, "n8")
+        n6  = Node(1, 2, "n6")
+        n9  = Node(1.5, 1.5, "n9")
+        n4  = Node(2, 1, "n4")
+        n10 = Node(2, 0.5, "n10")
+        n3  = Node(2, 0, "n3")
+        n11 = Node(1.5, -0.5, "n11")
+        n5  = Node(1, -1, "n5")
+        n12 = Node(0.5, -0.5, "n12")
+        n2  = Node(0, 0, "n2")
+        n7  = Node(0, 0.5, "n7")
+
+        nodes = [n1, n8, n6, n9, n4, n10, n3, n11, n5, n12, n2, n7]
+
+        for n in nodes:
+            self.g.add_node(n)
+
+        for i in range(len(nodes)):
+            self.g.add_edge(
+                HyperEdge((nodes[i], nodes[(i + 1) % len(nodes)]), "E", r=0)
+            )
+
+        self.g.add_edge(HyperEdge((n1, n6, n4, n3, n5, n2), "S", r=0))
+
+        self.p11 = P11()
+
+    def test_stage0(self):
+        draw(self.g, str(DRAW_DIR / "test11-case3-stage0.png"))
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 12
+        assert cnt.hyper == 13
+
+    def test_stage1(self):
+        applied = self.g.apply(self.p11)
+
+        draw(self.g, str(DRAW_DIR / "test11-case3-stage1.png"))
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 12
+        assert cnt.hyper == 13
