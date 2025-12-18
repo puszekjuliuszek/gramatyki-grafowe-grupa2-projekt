@@ -1,28 +1,3 @@
-"""
-Production P0
-
-Left side: Four nodes connected by E hyperedges forming a square,
-           with a Q hyperedge in the middle connecting all 4 nodes.
-           The Q hyperedge has r=0.
-
-Right side: Same structure but Q hyperedge has r=1.
-
-Example:
-    n1 ---E--- n2
-    |          |
-    E    Q     E
-    |   r=0    |
-    n4 ---E--- n3
-
-    is transformed into:
-
-    n1 ---E--- n2
-    |          |
-    E    Q     E
-    |   r=1    |
-    n4 ---E--- n3
-"""
-
 from edge import HyperEdge
 from graph import Graph
 from node import Node
@@ -51,7 +26,7 @@ class P12(Production):
             g.add_edge(HyperEdge((nodes[i], nodes[(i + 1) % len(nodes)]), "E", r=0))
         
         # T hyperedge in the middle with r=0 connecting all nodes except n5
-        g.add_edge(HyperEdge((n1, n2, n3, n4, n6, n7), "T", r=0))
+        g.add_edge(HyperEdge(tuple(nodes), "T", r=0))
 
         return g
 
@@ -70,8 +45,7 @@ class P12(Production):
                 g.add_edge(HyperEdge(edge.nodes, "E", r=edge.r), check_nodes=False)
 
         # rebuild T using all normal nodes EXCEPT n5
-        t_nodes = [n for n in normal_nodes if n.label != "n5"]
-        g.add_edge(HyperEdge(tuple(t_nodes), "T", r=1), check_nodes=False)
+        g.add_edge(HyperEdge(tuple(normal_nodes), "T", r=1), check_nodes=False)
 
         return g
 

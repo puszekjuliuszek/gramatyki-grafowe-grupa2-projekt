@@ -19,7 +19,7 @@ def build_base_p12_graph(T_r: int = 0) -> Graph:
     """
     Base graph matching P12 left side:
     - 7 nodes in cycle with E edges
-    - central T connects all except n5
+    - central T connects all nodes
     """
     g = Graph()
 
@@ -39,8 +39,8 @@ def build_base_p12_graph(T_r: int = 0) -> Graph:
     for i in range(len(nodes)):
         g.add_edge(HyperEdge((nodes[i], nodes[(i + 1) % len(nodes)]), "E", r=0))
 
-    # central T excludes n5
-    g.add_edge(HyperEdge((n1, n2, n3, n4, n6, n7), "T", r=T_r))
+    # central T includes all nodes
+    g.add_edge(HyperEdge((n1, n2, n3, n4, n5, n6, n7), "T", r=T_r))
 
     return g
 
@@ -150,7 +150,7 @@ class TestP12Case3:
         for i in range(len(nodes)):
             self.g.add_edge(HyperEdge((nodes[i], nodes[(i + 1) % len(nodes)]), "E", r=0))
 
-        self.g.add_edge(HyperEdge((n1, n2, n3, n4, n6), "T", r=0))
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4, n5, n6), "T", r=0))
         self.p12 = P12()
 
     def test_stage0(self):
@@ -189,8 +189,7 @@ class TestP12Case4:
                 continue  # missing edge
             self.g.add_edge(HyperEdge((nodes[i], nodes[(i + 1) % len(nodes)]), "E", r=0))
 
-        self.g.add_edge(HyperEdge((n1, n2, n3, n4, n6, n7), "T", r=0))
-
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4, n5, n6, n7), "T", r=0))
         self.p12 = P12()
 
     def test_stage0(self):
@@ -227,8 +226,7 @@ class TestP12Case5_1:
             tag = "Q" if i == 0 else "E"
             self.g.add_edge(HyperEdge((nodes[i], nodes[(i + 1) % len(nodes)]), tag, r=0))
 
-        self.g.add_edge(HyperEdge((n1, n2, n3, n4, n6, n7), "T", r=0))
-
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4, n5, n6, n7), "T", r=0))
         self.p12 = P12()
 
     def test_stage0(self):
