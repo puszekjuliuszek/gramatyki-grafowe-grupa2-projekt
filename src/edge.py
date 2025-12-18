@@ -14,10 +14,12 @@ class HyperEdge:
         nodes: Tuple of vertices connected by this hyperedge
         hypertag: Type of hyperedge (e.g., "E" - edge, "Q" - quadrilateral)
         r: R attribute used for production matching (0 or 1)
+        b: B attribute used for defining boundary edge (0 or 1)
     """
     nodes: Tuple[Node, ...]
     hypertag: str
     r: int = 0
+    b: int = 1
 
     def __post_init__(self):
         if len(self.nodes) < 2:
@@ -39,4 +41,4 @@ class HyperEdge:
 
     def __repr__(self):
         node_labels = ", ".join(n.label for n in self.nodes)
-        return f"HyperEdge({self.hypertag}, [{node_labels}], r={self.r})"
+        return f"HyperEdge({self.hypertag}, [{node_labels}], r={self.r}, b={self.b})"
