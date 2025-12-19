@@ -322,3 +322,79 @@ class TestP11Case5_2:
         assert cnt.normal == 12
         assert cnt.hyper == 13
         assert applied == 0
+
+class TestP11Case6:
+    """
+    Isomorphic left side, b and r attributes of old edges E should not change, new edges E should have b=0
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        n1  = Node(0, 1, "n1")
+        n8  = Node(0.5, 1.5, "n8")
+        n6  = Node(1, 2, "n6")
+        n9  = Node(1.5, 1.5, "n9")
+        n4  = Node(2, 1, "n4")
+        n10 = Node(2, 0.5, "n10")
+        n3  = Node(2, 0, "n3")
+        n11 = Node(1.5, -0.5, "n11")
+        n5  = Node(1, -1, "n5")
+        n12 = Node(0.5, -0.5, "n12")
+        n2  = Node(0, 0, "n2")
+        n7  = Node(0, 0.5, "n7")
+
+        self.nodes = [
+            n1, n8, n6, n9, n4, n10,
+            n3, n11, n5, n12, n2, n7
+        ]
+
+        for n in self.nodes:
+            self.g.add_node(n)
+
+        # create boundary edges E with b=1
+        self.e_edges = []
+        for i in range(len(self.nodes)):
+            e = HyperEdge(
+                (self.nodes[i], self.nodes[(i + 1) % len(self.nodes)]),
+                "E",
+                r=0,
+                b=1
+            )
+            self.e_edges.append(e)
+            self.g.add_edge(e)
+
+        # S hyperedge with correct r
+        self.g.add_edge(
+            HyperEdge((n1, n6, n4, n3, n5, n2), "S", r=1)
+        )
+
+        self.p11 = P11()
+
+    def test_stage0(self):
+        draw(self.g, str(DRAW_DIR / "test11-case6-stage0.png"))
+
+        # sanity check
+        print(e.b for e in self.e_edges)
+        assert all(e.b == 1 for e in self.e_edges)
+
+    def test_stage1(self):
+        applied = self.g.apply(self.p11)
+        draw(self.g, str(DRAW_DIR / "test11-case6-stage1.png"))
+
+        assert applied == 1
+
+        e_edges_after = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        central_node = self.g.get_node("center")
+        new_internal_e_edges = [e for e in e_edges_after if central_node in e.nodes]
+        boundary_edges = [e for e in e_edges_after if len(e.nodes) == 2 and e not in new_internal_e_edges]
+
+        # ensure no E edge has r accidentally flipped
+        assert all(e.r == 0 for e in boundary_edges)
+
+        # ensure no E edge has b accidentally flipped
+        assert all(e.b == 1 for e in boundary_edges)
+
+        # ensure new E edges indeed have b=0
+        assert all(e.b == 0 for e in new_internal_e_edges)
