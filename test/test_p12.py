@@ -271,3 +271,74 @@ class TestP12Case5_2:
         assert cnt.normal == 7
         assert cnt.hyper == 8
         assert applied == 0
+
+class TestP12Case6:
+    "Isomorphic left side, b and r attributes of edges E should not change, Only T.r should change from 0 to 1"
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        n1 = Node(0, 0, "n1")
+        n2 = Node(1, 0, "n2")
+        n3 = Node(1.5, 0.5, "n3")
+        n4 = Node(1, 1, "n4")
+        n5 = Node(0.5, 1.25, "n5")
+        n6 = Node(0, 1, "n6")
+        n7 = Node(-0.5, 0.5, "n7")
+
+        self.nodes = [n1, n2, n3, n4, n5, n6, n7]
+        for n in self.nodes:
+            self.g.add_node(n)
+
+        # boundary E edges with explicit b=1, r=0
+        self.e_edges = []
+        for i in range(len(self.nodes)):
+            e = HyperEdge(
+                (self.nodes[i], self.nodes[(i + 1) % len(self.nodes)]),
+                "E",
+                r=0,
+                b=1
+            )
+            self.e_edges.append(e)
+            self.g.add_edge(e)
+
+        # central T edge with r=0
+        self.g.add_edge(
+            HyperEdge(tuple(self.nodes), "T", r=0)
+        )
+
+        self.p12 = P12()
+
+    def test_stage0(self):
+        draw(self.g, str(DRAW_DIR / "test12-case6-stage0.png"))
+
+        # sanity check
+        assert all(e.b == 1 for e in self.e_edges)
+        assert all(e.r == 0 for e in self.e_edges)
+
+    def test_stage1(self):
+        applied = self.g.apply(self.p12)
+        draw(self.g, str(DRAW_DIR / "test12-case6-stage1.png"))
+
+        assert applied == 1
+
+        e_edges_after = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        assert len(e_edges_after) == len(self.e_edges)
+        assert all(e.b == 1 for e in e_edges_after)
+        assert all(e.r == 0 for e in e_edges_after)
+        
+
+        # for old_e in self.e_edges:
+        #     matches = [
+        #         e for e in e_edges_after
+        #         if set(e.nodes) == set(old_e.nodes)
+        #     ]
+        #     assert matches
+        #     assert matches[0].r == old_e.r
+        #     assert matches[0].b == old_e.b
+
+        # ---- T edge: r must flip to 1 ----
+        t_edge = [e for e in self.g.hyperedges if e.hypertag == "T"]
+        assert len(t_edge) == 1
+        assert t_edge[0].r == 1
