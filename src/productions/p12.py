@@ -23,9 +23,9 @@ class P12(Production):
         
         # E edges around the boundary (cycle)
         for i in range(len(nodes)):
-            g.add_edge(HyperEdge((nodes[i], nodes[(i + 1) % len(nodes)]), "E", r=0))
+            g.add_edge(HyperEdge((nodes[i], nodes[(i + 1) % len(nodes)]), "E"))
         
-        # T hyperedge in the middle with r=0 connecting all nodes except n5
+        # T hyperedge in the middle with r=0 connecting all nodes
         g.add_edge(HyperEdge(tuple(nodes), "T", r=0))
 
         return g
@@ -42,9 +42,9 @@ class P12(Production):
         # keep boundary E edges as-is
         for edge in left.hyperedges:
             if edge.hypertag == "E":
-                g.add_edge(HyperEdge(edge.nodes, "E", r=edge.r), check_nodes=False)
+                g.add_edge(HyperEdge(edge.nodes, "E", r=edge.r, b=edge.b), check_nodes=False)
 
-        # rebuild T using all normal nodes EXCEPT n5
+        # rebuild T using all normal nodes
         g.add_edge(HyperEdge(tuple(normal_nodes), "T", r=1), check_nodes=False)
 
         return g
