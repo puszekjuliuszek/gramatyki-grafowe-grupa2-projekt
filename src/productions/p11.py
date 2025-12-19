@@ -54,13 +54,12 @@ class P11(Production):
 
         for edge in left.hyperedges:
             if edge.hypertag == "E":
-                g.add_edge(HyperEdge(edge.nodes, "E", r=edge.r), check_nodes=False)
-
-        for i in range(1, len(nodes), 2):
-            g.add_edge(HyperEdge((nodes[i], center), "E"), check_nodes=False)
-        
+                g.add_edge(HyperEdge(edge.nodes, "E", r=edge.r, b=edge.b), check_nodes=False)
 
         n = len(nodes)
+        for i in range(1, n, 2):
+            g.add_edge(HyperEdge((nodes[i], center), "E", b=0), check_nodes=False)
+        
         for i in range(1, n, 2):
             g.add_edge(HyperEdge((nodes[i], nodes[(i+1)%n], nodes[(i+2)%n], center), "Q", r=0), check_nodes=False)
 
