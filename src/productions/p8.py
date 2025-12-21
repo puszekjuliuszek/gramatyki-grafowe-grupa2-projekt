@@ -16,7 +16,8 @@ class P8(Production):
     """
     Production P8 - Break boundary edges
 
-    Breaks the pentagonal element (hypertag == P) marked for refinement (r == 1)
+    Breaks the pentagonal element (hypertag == P) marked for refinement (r == 1),
+    replacing it with 5 Q and 5 E hyperedges.
     """
 
     def get_left_side(self) -> Graph:
@@ -37,8 +38,8 @@ class P8(Production):
             Node(0.5, 0, "n6"),
             Node(0, 0.5, "n7"),
             Node(0.5, 1, "n8"),
-            Node(1.25, 0.25, "n9"),
-            Node(1.25, 0.75, "n10")
+            Node(1.25, 0.75, "n9"),
+            Node(1.25, 0.25, "n10")
         ] 
 
         for node in nodes:
@@ -70,32 +71,27 @@ class P8(Production):
         """
         g = Graph()
 
-        nodes = left.nodes.values()
+        nodes = left.nodes
+        line_nodes = nodes[1::2]
 
-        new_x = sum([node.x for node in nodes[:5]]) / 5
-        new_y = sum([node.y for node in nodes[:5]]) / 5
+        new_x = sum([node.x for node in line_nodes]) / 5
+        new_y = sum([node.y for node in line_nodes]) / 5
         new_node = Node(new_x, new_y, "n11")
-        nodes.append(new_node)
 
-        for node in nodes:
+        for node in nodes + [new_node]:
             g.add_node(node)
 
         for edge in left.hyperedges:
             if edge.hypertag == "E":
                 g.add_edge(edge)
 
-        g.add_edge(HyperEdge((nodes[10], nodes[5]), "E", b=0), check_nodes=False)
-        g.add_edge(HyperEdge((nodes[10], nodes[6]), "E", b=0), check_nodes=False)
-        g.add_edge(HyperEdge((nodes[10], nodes[7]), "E", b=0), check_nodes=False)
-        g.add_edge(HyperEdge((nodes[10], nodes[8]), "E", b=0), check_nodes=False)
-        g.add_edge(HyperEdge((nodes[10], nodes[9]), "E", b=0), check_nodes=False)
-    
-        g.add_edge(HyperEdge((nodes[10], nodes[0], nodes[5], nodes[6]), "Q", r=0, b=0), check_nodes=False)
-        g.add_edge(HyperEdge((nodes[10], nodes[5], nodes[1], nodes[9]), "Q", r=0, b=0), check_nodes=False)
-        g.add_edge(HyperEdge((nodes[10], nodes[9], nodes[4], nodes[8]), "Q", r=0, b=0), check_nodes=False)
-        g.add_edge(HyperEdge((nodes[10], nodes[8], nodes[2], nodes[7]), "Q", r=0, b=0), check_nodes=False)
-        g.add_edge(HyperEdge((nodes[10], nodes[7], nodes[3], nodes[6]), "Q", r=0, b=0), check_nodes=False)
+        for node in line_nodes:
+            g.add_edge(HyperEdge((new_node, node), "E", b=0), check_nodes=False)
 
+        n = len(nodes)
+        for i in range(1, len(nodes), 2):
+            g.add_edge(HyperEdge((nodes[i], nodes[(i+1)%n], nodes[(i+2)%n], new_node), "Q", r=0, b=0), check_nodes=False)
+      
         return g
 
     def filter_match(self, matched_graph: Graph) -> bool:

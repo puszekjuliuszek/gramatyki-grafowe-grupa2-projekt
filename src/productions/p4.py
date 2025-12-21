@@ -49,7 +49,7 @@ class P4(Production):
         """
         g = Graph()
 
-        nodes = left.nodes.values()
+        nodes = left.nodes
 
         new_x = (nodes[0].x + nodes[1].x) / 2
         new_y = (nodes[0].y + nodes[1].y) / 2
@@ -60,7 +60,7 @@ class P4(Production):
             g.add_node(node)
 
         g.add_edge(HyperEdge((nodes[0], nodes[2]), "E", r=0, b=1), check_nodes=False)
-        g.add_edge(HyperEdge((nodes[0], nodes[1]), "E", r=0, b=1), check_nodes=False)
+        g.add_edge(HyperEdge((nodes[2], nodes[1]), "E", r=0, b=1), check_nodes=False)
 
         return g
 
