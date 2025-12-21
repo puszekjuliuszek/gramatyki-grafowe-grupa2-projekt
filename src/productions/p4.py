@@ -8,6 +8,7 @@ from edge import HyperEdge
 from graph import Graph
 from node import Node
 from productions.production import Production
+from time import time
 
 
 @Production.register
@@ -33,7 +34,7 @@ class P4(Production):
         g.add_node(n1)
         g.add_node(n2)
 
-        g.add_edge(HyperEdge((n1, n2), "E", r=1, b=1))
+        g.add_edge(HyperEdge((n1, n2), "E", r=1))
 
         return g
 
@@ -53,14 +54,15 @@ class P4(Production):
 
         new_x = (nodes[0].x + nodes[1].x) / 2
         new_y = (nodes[0].y + nodes[1].y) / 2
-        new_node = Node(new_x, new_y, "n3")
+        new_node = Node(new_x, new_y, f"n{time()}")
         nodes.append(new_node)
 
         for node in nodes:
             g.add_node(node)
 
-        g.add_edge(HyperEdge((nodes[0], nodes[2]), "E", r=0, b=1), check_nodes=False)
-        g.add_edge(HyperEdge((nodes[2], nodes[1]), "E", r=0, b=1), check_nodes=False)
+        b_value = left.hyperedges[0].b
+        g.add_edge(HyperEdge((nodes[0], nodes[2]), "E", r=0, b=b_value), check_nodes=False)
+        g.add_edge(HyperEdge((nodes[2], nodes[1]), "E", r=0, b=b_value), check_nodes=False)
 
         return g
 

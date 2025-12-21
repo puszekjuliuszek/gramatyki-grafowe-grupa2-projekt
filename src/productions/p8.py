@@ -55,7 +55,7 @@ class P8(Production):
         g.add_edge(HyperEdge((nodes[7], nodes[3]), "E"))
         g.add_edge(HyperEdge((nodes[3], nodes[6]), "E"))
         g.add_edge(HyperEdge((nodes[6], nodes[0]), "E"))
-        g.add_edge(HyperEdge((nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]), "P", r=1))
+        g.add_edge(HyperEdge((nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]), "P"))
 
         return g
 
@@ -86,7 +86,7 @@ class P8(Production):
                 g.add_edge(edge)
 
         for node in line_nodes:
-            g.add_edge(HyperEdge((new_node, node), "E", b=0), check_nodes=False)
+            g.add_edge(HyperEdge((new_node, node), "E", r=0, b=0), check_nodes=False)
 
         n = len(nodes)
         for i in range(1, len(nodes), 2):

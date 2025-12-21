@@ -40,17 +40,17 @@ class TestP8Case1:
         for node in nodes:
             self.g.add_node(node)
 
-        self.g.add_edge(HyperEdge((nodes[0], nodes[5]), "E"))
-        self.g.add_edge(HyperEdge((nodes[5], nodes[1]), "E"))
-        self.g.add_edge(HyperEdge((nodes[1], nodes[9]), "E"))
-        self.g.add_edge(HyperEdge((nodes[9], nodes[4]), "E"))
-        self.g.add_edge(HyperEdge((nodes[4], nodes[8]), "E"))
-        self.g.add_edge(HyperEdge((nodes[8], nodes[2]), "E"))
-        self.g.add_edge(HyperEdge((nodes[2], nodes[7]), "E"))
-        self.g.add_edge(HyperEdge((nodes[7], nodes[3]), "E"))
-        self.g.add_edge(HyperEdge((nodes[3], nodes[6]), "E"))
-        self.g.add_edge(HyperEdge((nodes[6], nodes[0]), "E"))
-        self.g.add_edge(HyperEdge((nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]), "P", r=1))
+        self.g.add_edge(HyperEdge((nodes[0], nodes[5]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[5], nodes[1]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[1], nodes[9]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[9], nodes[4]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[4], nodes[8]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[8], nodes[2]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[2], nodes[7]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[7], nodes[3]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[3], nodes[6]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[6], nodes[0]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]), "P", r=1, b=0))
 
         self.p = P8()
 
