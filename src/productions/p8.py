@@ -9,6 +9,7 @@ from edge import HyperEdge
 from graph import Graph
 from node import Node
 from productions.production import Production
+from time import time
 
 
 @Production.register
@@ -39,8 +40,8 @@ class P8(Production):
             Node(0, 0.5, "n7"),
             Node(0.5, 1, "n8"),
             Node(1.25, 0.75, "n9"),
-            Node(1.25, 0.25, "n10")
-        ] 
+            Node(1.25, 0.25, "n10"),
+        ]
 
         for node in nodes:
             g.add_node(node)
@@ -76,7 +77,7 @@ class P8(Production):
 
         new_x = sum([node.x for node in line_nodes]) / 5
         new_y = sum([node.y for node in line_nodes]) / 5
-        new_node = Node(new_x, new_y, "n11")
+        new_node = Node(new_x, new_y, f"n{time()}")
 
         for node in nodes + [new_node]:
             g.add_node(node)
@@ -90,8 +91,16 @@ class P8(Production):
 
         n = len(nodes)
         for i in range(1, len(nodes), 2):
-            g.add_edge(HyperEdge((nodes[i], nodes[(i+1)%n], nodes[(i+2)%n], new_node), "Q", r=0, b=0), check_nodes=False)
-      
+            g.add_edge(
+                HyperEdge(
+                    (nodes[i], nodes[(i + 1) % n], nodes[(i + 2) % n], new_node),
+                    "Q",
+                    r=0,
+                    b=0,
+                ),
+                check_nodes=False,
+            )
+
         return g
 
     def filter_match(self, matched_graph: Graph) -> bool:
