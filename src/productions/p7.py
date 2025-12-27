@@ -66,7 +66,14 @@ class P7(Production):
         if not p_edge_found:
             return False
         
-        if all(getattr(e, "r", 0) == 1 for e in e_edges):
+        if not any(e.r == 0 for e in e_edges):
+            return False    
+    
+        for e in e_edges:
+            if not hasattr(e, "r"):
+                raise AttributeError("Edge is missing 'r' attribute")
+
+        if all(e.r == 1 for e in e_edges):
             return False
             
         return True
