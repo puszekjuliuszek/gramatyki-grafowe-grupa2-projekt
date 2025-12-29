@@ -82,6 +82,93 @@ class TestP10Case1:
         for e in e_edges:
             assert e.r == 1, "E hyperedges should have r=1"
 
+class TestP10Case4:
+    """
+    Test case 4: Single hexagonal element with E hyperedges (r=0) and K hyperedge (r=1).
+
+    Input: 6 outer nodes + 6 E hyperedges (r=0) + K hyperedge (r=1).
+    Expected: Same structure, E hyperedges have r=1, K has r=0.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        n1 = Node(1, 0, "n1")
+        n2 = Node(0.5, 0.866, "n2")
+        n3 = Node(-0.5, 0.866, "n3")
+        n4 = Node(-1, 0, "n4")
+        n5 = Node(-0.5, -0.866, "n5")
+        n6 = Node(0.5, -0.866, "n6")
+
+        nodes = [n1, n2, n3, n4, n5, n6]
+        for n in nodes:
+            self.g.add_node(n)
+
+        boundary = [n1, n2, n3, n4, n5, n6]
+        for i in range(len(boundary)):
+            curr_n = boundary[i]
+            next_n = boundary[(i + 1) % len(boundary)]
+            self.g.add_edge(HyperEdge((curr_n, next_n), "E"))
+
+        self.g.add_edge(HyperEdge(tuple(nodes), "K", r=1))
+
+        self.p10 = P10()
+
+    def test_no_match(self):
+        """Production should not apply if S.r != 1."""
+        draw(self.g, str(DRAW_DIR / "test10-case4-stage0.png"))
+
+        applied = self.g.apply(self.p10)
+
+        assert applied == 0, "Should NOT apply when mark is not S.r=1"
+
+        s_edges = [e for e in self.g.hyperedges if e.hypertag == "S"]
+        assert len(s_edges) == 0
+
+class TestP10Case5:
+    """
+    Test case 5: Single hexagonal element with E hyperedges (r=0) and S hyperedge (r=1).
+
+    Input: 6 outer nodes + 5 E hyperedges (r=0) + S hyperedge (r=1).
+    Expected: Not applied.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        n1 = Node(1, 0, "n1")
+        n2 = Node(0.5, 0.866, "n2")
+        n3 = Node(-0.5, 0.866, "n3")
+        n4 = Node(-1, 0, "n4")
+        n5 = Node(-0.5, -0.866, "n5")
+        n6 = Node(0.5, -0.866, "n6")
+
+        nodes = [n1, n2, n3, n4, n5, n6]
+        for n in nodes:
+            self.g.add_node(n)
+
+        boundary = [n1, n2, n3, n4, n5, n6]
+        for i in range(len(boundary) - 1):  # Only 5 edges instead of 6
+            curr_n = boundary[i]
+            next_n = boundary[(i + 1) % len(boundary)]
+            self.g.add_edge(HyperEdge((curr_n, next_n), "E"))
+
+        self.g.add_edge(HyperEdge(tuple(nodes), "S", r=1))
+
+        self.p10 = P10()
+
+    def test_no_match(self):
+        """Production should not apply if it is not a valid oxogenal structure."""
+        draw(self.g, str(DRAW_DIR / "test10-case5-stage0.png"))
+
+        applied = self.g.apply(self.p10)
+
+        assert applied == 0, "Should NOT apply when S.r != 1"
+
+        s_edges = [e for e in self.g.hyperedges if e.hypertag == "S"]
+        # assert len(s_edges) == 0
 
 class TestP10Case2:
     """
@@ -178,3 +265,73 @@ class TestP10Case3:
         e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
         assert len(e_edges) == 12  # 6 per hexagon
         assert all(e.r == 1 for e in e_edges), "All E hyperedges should have r=1"
+
+class TestP10Case6:
+    """
+    Test case 1: Single hexagonal element with E hyperedges (r=0) and S hyperedge (r=0).
+    
+    Input: 6 outer nodes + 6 E hyperedges (r=0) + S hyperedge (r=0).
+    Expected: Same structure, E hyperedges have r=1, S has r=0.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        n1 = Node(1, 0, "n1")
+        n2 = Node(0.5, 0.866, "n2")
+        n3 = Node(-0.5, 0.866, "n3")
+        n4 = Node(-1, 0, "n4")
+        n5 = Node(-0.5, -0.866, "n5")
+        n6 = Node(0.5, -0.866, "n6")
+        n7 = Node(-0.5, -0.466, "n7")
+        n8 = Node(0.5, -0.466, "n8")
+
+
+        nodes = [n1, n2, n3, n4, n5, n6, n7, n8]
+        for n in nodes:
+            self.g.add_node(n)
+
+        boundary = [n1, n2, n3, n4, n5, n6]
+        for i in range(len(boundary)):
+            curr_n = boundary[i]
+            next_n = boundary[(i + 1) % len(boundary)]
+            self.g.add_edge(HyperEdge((curr_n, next_n), "E"))
+
+        self.g.add_edge(HyperEdge(tuple(nodes), "S", r=1))
+
+        self.p10 = P10()
+
+    def test_stage0(self):
+        """Test input graph state."""
+        draw(self.g, str(DRAW_DIR / "test10-case6-stage0.png"))
+
+        cnt = self.g.count_nodes()
+        # assert cnt.normal == 6, "Should be 6 nodes"
+        # assert cnt.hyper == 7, "Should be 7 hyperedges (6 E + 1 S)"
+
+        s_edges = [e for e in self.g.hyperedges if e.hypertag == "S"]
+        assert len(s_edges) == 1
+        assert s_edges[0].r == 1
+
+        e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        assert len(e_edges) == 6
+        for e in e_edges:
+            assert e.r == 0
+
+    def test_stage1(self):
+        """Test application of P10."""
+        applied = self.g.apply(self.p10)
+
+        draw(self.g, str(DRAW_DIR / "test10-case6-stage1.png"))
+
+        assert applied == 1, "Should apply exactly once"
+
+        s_edges = [e for e in self.g.hyperedges if e.hypertag == "S"]
+        assert len(s_edges) == 1
+        assert s_edges[0].r == 1, "S hyperedge should still have r=1"
+
+        e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        assert len(e_edges) == 6
+        for e in e_edges:
+            assert e.r == 1, "E hyperedges should have r=1"
