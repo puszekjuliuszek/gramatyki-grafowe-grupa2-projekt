@@ -306,7 +306,7 @@ class TestP9Attributes:
         self.p9 = P9()
         self.g = Graph()
         
-        # Create standard hexagon nodes
+        # Create  hexagon nodes
         self.nodes = [
             Node(1, 0, "n1"), Node(0.5, 0.866, "n2"), Node(-0.5, 0.866, "n3"),
             Node(-1, 0, "n4"), Node(-0.5, -0.866, "n5"), Node(0.5, -0.866, "n6")
@@ -318,7 +318,7 @@ class TestP9Attributes:
         """
         Test: 'E' type edges possess a 'B' attribute with varying values.
         
-        The matching algorithm should ignore attributes that are not explicitly 
+		The matching algorithm should ignore attributes that are not explicitly 
         restricted by the left side of production P9.
         """
         
@@ -340,12 +340,16 @@ class TestP9Attributes:
         # Add the central 'S' hyperedge
         self.g.add_edge(HyperEdge(tuple(self.nodes), "S", r=0))
 
-        # Check if the edges actually have the B attribute (sanity check for the test setup)
+        # Check if the edges actually have the B attribute
         e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
         assert all(hasattr(e, 'B') for e in e_edges), "Edges should have attribute B for this test"
 
+        draw(self.g, str(DRAW_DIR / "test9-attr-B-stage0.png"))
+
         # Apply the production
         applied = self.g.apply(self.p9)
+
+        draw(self.g, str(DRAW_DIR / "test9-attr-B-stage1.png"))
 
         # Assertion: Production should apply successfully (return 1) 
         # despite the presence of the B parameter.
