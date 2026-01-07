@@ -717,7 +717,7 @@ class TestP7Case10:
         """
         Verify initial state.
         """
-        draw(self.g, str(DRAW_DIR / "test7-case9-stage0.png"))
+        draw(self.g, str(DRAW_DIR / "test7-case10-stage0.png"))
 
         cnt = self.g.count_nodes()
         assert cnt.normal == 8, "There should be 8 normal nodes"
@@ -736,7 +736,7 @@ class TestP7Case10:
         """
         applied = self.g.apply(self.p7)
         
-        draw(self.g, str(DRAW_DIR / "test7-case9-stage1.png"))
+        draw(self.g, str(DRAW_DIR / "test7-case10-stage1.png"))
 
         assert applied == 0, "Production P7 should be applied exactly twice"
 
