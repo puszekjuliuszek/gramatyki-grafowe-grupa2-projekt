@@ -72,13 +72,20 @@ class TestP5Case1:
         
         assert applied == 1, "Production should be applied exactly once"
         
-        # Check node count
+        # Check node count: 8 original + 1 new center = 9
         cnt = self.g.count_nodes()
         assert cnt.normal == 9, f"Should have 9 nodes (8 original + 1 V), got {cnt.normal}"
+
+        # Check total hyperedges:
+        # Original: 8 E + 1 Q = 9
+        # Removed: 1 Q = -1
+        # Added: 4 Q + 4 E = +8
+        # Total: 9 - 1 + 8 = 16
+        assert len(self.g.hyperedges) == 16, f"Should have 16 hyperedges, got {len(self.g.hyperedges)}"
         
         # Check Q hyperedges
         q_edges = [e for e in self.g.hyperedges if e.hypertag == "Q"]
-        assert len(q_edges) == 5, f"Should have 5 Q hyperedges, got {len(q_edges)}"
+        assert len(q_edges) == 4, f"Should have 4 Q hyperedges, got {len(q_edges)}"
         assert all(e.r == 0 for e in q_edges), "All Q hyperedges should have r=0"
         
         # Check central vertex exists
@@ -222,6 +229,9 @@ class TestP5Case4:
         self.g.add_edge(HyperEdge((n12, n16), "E", r=0))
         self.g.add_edge(HyperEdge((n16, n9), "E", r=0))
         self.g.add_edge(HyperEdge((n9, n10, n11, n12), "Q", r=1))
+
+        # Connection between graphs (as requested)
+        self.g.add_edge(HyperEdge((n2, n9), "E", r=0))
         
         self.p5 = P5()
 
@@ -235,8 +245,19 @@ class TestP5Case4:
         
         assert applied == 2, f"Production should be applied 2 times, got {applied}"
         
+        # Check node count: 16 original + 2 new centers = 18
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 18, f"Should have 18 nodes, got {cnt.normal}"
+
+        # Check total hyperedges: 
+        # Original: 8 E + 1 Q (quad 1) + 8 E + 1 Q (quad 2) + 1 E (connection) = 19
+        # Removed: 1 Q per quad = -2
+        # Added: 4 Q + 4 E per quad = +16
+        # Total: 19 - 2 + 16 = 33
+        assert len(self.g.hyperedges) == 33, f"Should have 33 hyperedges, got {len(self.g.hyperedges)}"
+        
         q_edges = [e for e in self.g.hyperedges if e.hypertag == "Q"]
-        assert len(q_edges) == 10, f"Should have 10 Q hyperedges (5 per quadrilateral), got {len(q_edges)}"
+        assert len(q_edges) == 8, f"Should have 8 Q hyperedges (4 per quadrilateral), got {len(q_edges)}"
         assert all(e.r == 0 for e in q_edges), "All Q hyperedges should have r=0"
         
         # Check that two central vertices exist
@@ -283,3 +304,64 @@ class TestP5Case5:
         
         applied = self.g.apply(self.p5)
         assert applied == 0, "Production should not apply when structure is incomplete"
+
+
+class TestP5Case6:
+    """Test: Distorted/Rotated quadrilateral."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+        
+        # Rotated/Distorted coordinates
+        # Center roughly at (3, 3)
+        n1 = Node(1, 1, "n1")  # Bottom-left
+        n2 = Node(5, 1, "n2")  # Bottom-right
+        n3 = Node(6, 4, "n3")  # Top-right (skewed)
+        n4 = Node(2, 5, "n4")  # Top-left (skewed)
+        
+        # Midpoints (approximate)
+        n5 = Node(3, 1, "n5")    # Bottom
+        n6 = Node(5.5, 2.5, "n6") # Right
+        n7 = Node(4, 4.5, "n7")  # Top
+        n8 = Node(1.5, 3, "n8")  # Left
+        
+        for node in [n1, n2, n3, n4, n5, n6, n7, n8]:
+            self.g.add_node(node)
+        
+        self.g.add_edge(HyperEdge((n1, n5), "E", r=0))
+        self.g.add_edge(HyperEdge((n5, n2), "E", r=0))
+        self.g.add_edge(HyperEdge((n2, n6), "E", r=0))
+        self.g.add_edge(HyperEdge((n6, n3), "E", r=0))
+        self.g.add_edge(HyperEdge((n3, n7), "E", r=0))
+        self.g.add_edge(HyperEdge((n7, n4), "E", r=0))
+        self.g.add_edge(HyperEdge((n4, n8), "E", r=0))
+        self.g.add_edge(HyperEdge((n8, n1), "E", r=0))
+        
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
+        
+        self.p5 = P5()
+
+    def test_distorted_application(self):
+        """Production should apply correctly to distorted shapes."""
+        draw(self.g, str(DRAW_DIR / "test5-case6-before.png"))
+        
+        applied = self.g.apply(self.p5)
+        
+        draw(self.g, str(DRAW_DIR / "test5-case6-after.png"))
+        
+        assert applied == 1
+        
+        # Check node count
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 9
+        
+        # Check Q edges
+        q_edges = [e for e in self.g.hyperedges if e.hypertag == "Q"]
+        assert len(q_edges) == 4
+        
+        # Verify central vertex is inside the bounding box
+        v = [n for n in self.g.nodes if n.label.startswith("V_")][0]
+        assert 1 < v.x < 6
+        assert 1 < v.y < 5
+
