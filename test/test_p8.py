@@ -294,4 +294,65 @@ class TestP8Case4:
         cnt = self.g.count_nodes()
         assert cnt.normal == 10, "Should be 10 regular nodes"
         assert cnt.hyper == 11, "Should be 11 hyperedges"
-        
+
+class TestP8Case5:
+    """
+    Missing node. Production should not be applied.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        nodes = [
+            Node(0, 0, "n1"),
+            Node(1, 0, "n2"),
+            Node(1, 1, "n3"),
+            Node(0, 1, "n4"),
+            Node(1.5, 0.5, "n5"),
+            Node(0.5, 0, "n6"),
+            Node(0, 0.5, "n7"),
+            Node(0.5, 1, "n8"),
+            Node(1.25, 0.75, "n9"),
+            # Node(1.25, 0.25, "n10")
+        ] 
+
+        for node in nodes:
+            self.g.add_node(node)
+
+        self.g.add_edge(HyperEdge((nodes[0], nodes[5]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[5], nodes[1]), "E", b=1))
+        # self.g.add_edge(HyperEdge((nodes[1], nodes[9]), "E", b=1))
+        # self.g.add_edge(HyperEdge((nodes[9], nodes[4]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[4], nodes[8]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[8], nodes[2]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[2], nodes[7]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[7], nodes[3]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[3], nodes[6]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[6], nodes[0]), "E", b=1))
+        self.g.add_edge(HyperEdge((nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]), "Q", r=1, b=0))
+
+        self.p = P8()
+
+    def test_stage0(self):
+        """Test input graph (before applying production)."""
+        draw(self.g, str(DRAW_DIR / "test8-case5-stage0.png"))
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 9, "Should be 9 regular nodes"
+        assert cnt.hyper == 9, "Should be 9 hyperedge (10E + 1P - 2 due to missing nodes)"
+
+        p_edges = [e for e in self.g.hyperedges if e.hypertag == "P"]
+        assert len(p_edges) == 0
+
+    def test_stage1(self):
+        """Test graph after applying production."""
+        applied = self.g.apply(self.p)
+
+        draw(self.g, str(DRAW_DIR / "test8-case5-stage1.png"))
+
+        assert applied == 0, "Production should not be applied"
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 9, "Should be 9 regular nodes"
+        assert cnt.hyper == 9, "Should be 9 hyperedges"
