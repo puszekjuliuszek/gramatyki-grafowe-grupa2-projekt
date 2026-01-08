@@ -294,3 +294,4 @@ class TestP8Case4:
         cnt = self.g.count_nodes()
         assert cnt.normal == 10, "Should be 10 regular nodes"
         assert cnt.hyper == 11, "Should be 11 hyperedges"
+        
