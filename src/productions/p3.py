@@ -21,28 +21,28 @@ class P3(Production):
         return g
 
     def get_right_side(self, left: Graph) -> Graph:
-        g = Graph()
         edge = left.hyperedges[0]
         n1, n2 = edge.nodes
 
-        g.add_node(n1)
-        g.add_node(n2)
-        edge.r=0
-        g.add_edge(edge)
+        new_node = Node(
+            (n1.x + n2.x) / 2,
+            (n1.y + n2.y) / 2,
+            ""
+        )
 
-        new_x = (n1.x + n2.x) / 2
-        new_y = (n1.y + n2.y) / 2
-        
-        new_node = Node(new_x, new_y, "n3")
+        left._nodes[new_node.label] = new_node
 
-        g.add_node(new_node)
-        e1 = HyperEdge((n1, new_node), "E", r=0, b=edge.b)
-        e2 = HyperEdge((new_node, n2), "E", r=0, b=edge.b)
+        left.add_edge(
+            HyperEdge((n1, new_node), "E", r=0, b=edge.b),
+            check_nodes=False
+        )
+        left.add_edge(
+            HyperEdge((n2, new_node), "E", r=0, b=edge.b),
+            check_nodes=False
+        )
 
-        g.add_edge(e1, check_nodes=False)
-        g.add_edge(e2, check_nodes=False)
-
-        return g
+        edge.r = 0
+        return left
 
     def filter_match(self, matched_graph: Graph) -> bool:
         if len(matched_graph.hyperedges) != 1:
