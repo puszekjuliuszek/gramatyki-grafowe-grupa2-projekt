@@ -42,10 +42,10 @@ class P7(Production):
 
         for edge in left.hyperedges:
             if edge.hypertag == "P":
-                new_p = HyperEdge(edge.nodes, "P", r=1)
+                new_p = HyperEdge(edge.nodes, "P", r=1, b= edge.b)
                 g.add_edge(new_p, check_nodes=False)
             elif edge.hypertag == "E":
-                new_e = HyperEdge(edge.nodes, "E", r=1)
+                new_e = HyperEdge(edge.nodes, "E", r=1, b=edge.b)
                 g.add_edge(new_e, check_nodes=False)
 
         return g

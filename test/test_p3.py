@@ -246,3 +246,77 @@ class TestP3Case4:
         actual_positions = {(n.x, n.y) for n in new_nodes}
 
         assert actual_positions == expected_positions
+        
+class TestP3Case5:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        n1 = Node(0, 0, "n1")
+        n2 = Node(0, 4, "n2")
+        n3 = Node(4, 4, "n3")
+
+        self.g.add_node(n1)
+        self.g.add_node(n2)
+        self.g.add_node(n3)
+
+        self.g.add_edge(HyperEdge((n1, n2), "F", r=1, b=0))
+        self.g.add_edge(HyperEdge((n2, n3), "E", r=1, b=0))
+        self.g.add_edge(HyperEdge((n3), "E", r=1, b=0))
+        self.g.add_edge(HyperEdge((n1), "E", r=1, b=1))
+
+        self.p3 = P3()
+
+    def test_stage0(self):
+        """Test input graph."""
+        draw(self.g, str(DRAW_DIR / "test3-case5-stage0.png"))
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 3
+        assert cnt.hyper == 4
+
+        edges = self.g.hyperedges
+        assert len(edges) == 4
+        assert edges[0].hypertag == "F"
+        assert edges[0].r == 1
+        assert edges[0].b == 0
+
+        assert edges[1].hypertag == "E"
+        assert edges[1].r == 1
+        assert edges[1].b == 0
+
+        assert edges[2].hypertag == "E"
+        assert edges[2].r == 1
+        assert edges[2].b == 0
+
+        assert edges[3].hypertag == "E"
+        assert edges[3].r == 1
+        assert edges[3].b == 1
+    
+    def test_stage1(self):
+        applied = self.g.apply(self.p3)
+
+        draw(self.g, str(DRAW_DIR / "test3-case5-stage1.png"))
+
+        assert applied == 1, "Production P3 should be applied exactly once"
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 4
+        assert cnt.hyper == 6
+
+        nodes = {node.label: node for node in self.g.nodes}
+
+        assert "n1" in nodes
+        assert "n2" in nodes
+        assert "n3" in nodes
+
+        new_nodes = [n for n in nodes.values() if n.label not in {"n1", "n2", "n3"}]
+        assert len(new_nodes) == 1
+
+        expected_positions = {
+            ((0 + 4) / 2, (4 + 4) / 2),  # środek n2–n3 (2,4)
+        }
+
+        actual_positions = {(n.x, n.y) for n in new_nodes}
+
+        assert actual_positions == expected_positions

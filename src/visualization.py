@@ -27,9 +27,11 @@ def draw(graph: Graph, filename: str) -> None:
     for label, data in graph._graph.nodes(data=True):
         node = data['node']
         pos[label] = (node.x, node.y)
+        if (node.x, node.y) in pos.values() and (node.x, node.y + 0.2) not in pos.values():
+            pos[label] = (node.x, node.y + 0.2)
         
         if data.get('is_hyper', False):
-            node_colors.append('red')
+            node_colors.append('red' if node.hyperref.b != 0 else 'green')
             node_sizes.append(2000)
             if node.hyperref:
                 labels[label] = f"{node.hyperref.hypertag}:{node.hyperref.r}"
@@ -37,7 +39,7 @@ def draw(graph: Graph, filename: str) -> None:
                 labels[label] = label.split('_')[0]
         else:
             node_colors.append('lightblue')
-            node_sizes.append(2500)
+            node_sizes.append(2000)
             labels[label] = label
     
     nx.draw(
@@ -48,7 +50,7 @@ def draw(graph: Graph, filename: str) -> None:
         labels=labels,
         node_color=node_colors,
         node_size=node_sizes,
-        font_size=8,
+        font_size=12,
         font_weight='bold',
         edge_color='gray',
         width=1.5
@@ -62,7 +64,7 @@ def draw(graph: Graph, filename: str) -> None:
     
     plt.title(f"Graph: {len(graph.nodes)} nodes, {len(graph.hyperedges)} hyperedges")
     plt.tight_layout()
-    plt.savefig(filename, dpi=150)
+    plt.savefig(filename, dpi=300)
     plt.close()
     
     print(f"Saved graph to: {filename}")

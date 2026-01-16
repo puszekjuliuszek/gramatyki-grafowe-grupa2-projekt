@@ -750,3 +750,147 @@ class TestP7Case10:
         e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
         for e in e_edges:
             assert e.r == 0, f"All E edges must have r=0. Found r={e.r}"
+            
+class TestP7Case11:
+    """
+    Check if production P7 correctly updates all 'E' edges to r=1
+    """
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        nodes = [
+        Node(0, 0, "n1"),
+        Node(1, 0, "n2"),
+        Node(1, 1, "n3"),
+        Node(0, 1, "n4"),
+        Node(1 + (2 ** 0.5)/2 , 1/2, "n5")
+        ]
+        
+        for n in nodes:
+            self.g.add_node(n)
+
+        edges_indices = [(0, 1), (1, 4), (4, 2), (2, 3), (3, 0)]
+        for i, (start, end) in enumerate(edges_indices):
+            e = HyperEdge((nodes[start], nodes[end]), "E", r=0, b=1)
+            self.g.add_edge(e)
+            
+
+        p_edge = HyperEdge(tuple(nodes), "P", r=1)
+        self.g.add_edge(p_edge)
+
+        self.p7 = P7()
+
+    def test_initial_state(self):
+        """
+        Verify initial state.
+        """
+        draw(self.g, str(DRAW_DIR / "test7-case11-stage0.png"))
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 5
+        assert cnt.hyper == 6
+
+        p_edges = [e for e in self.g.hyperedges if e.hypertag == "P"]
+        assert len(p_edges) == 1
+        assert p_edges[0].r == 1
+
+        e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        assert all(e.r == 0 for e in e_edges)
+
+    def test_applying_production(self):
+        """
+        Verify graph after applying P7.
+        """
+        applied = self.g.apply(self.p7)
+        
+        draw(self.g, str(DRAW_DIR / "test7-case11-stage1.png"))
+
+        assert applied == 1, "Production P7 should be applied exactly once"
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 5
+        assert cnt.hyper == 6
+
+        p_edges = [e for e in self.g.hyperedges if e.hypertag == "P"]
+        assert p_edges[0].r == 1, "P edge should retain r=1"
+
+        e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        for e in e_edges:
+            assert e.r == 1, f"All E edges must now have r=1. Found r={e.r}"
+        e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        for e in e_edges:
+            assert e.b == 1, f"All E edges must now have r=1. Found r={e.b}"
+
+class TestP7Case12:
+    """
+    Check if production P7 correctly updates all 'E' edges to r=1
+    """
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        nodes = [
+        Node(0, 0, "n1"),
+        Node(1, 0, "n2"),
+        Node(1, 1, "n3"),
+        Node(0, 1, "n4"),
+        Node(1 + (2 ** 0.5)/2 , 1/2, "n5")
+        ]
+        
+        for n in nodes:
+            self.g.add_node(n)
+
+        edges_indices = [(0, 1), (1, 4), (4, 2), (2, 3), (3, 0)]
+        for i, (start, end) in enumerate(edges_indices):
+            e = HyperEdge((nodes[start], nodes[end]), "E", r=0, b=0)
+            self.g.add_edge(e)
+            
+
+        p_edge = HyperEdge(tuple(nodes), "P", r=1)
+        self.g.add_edge(p_edge)
+
+        self.p7 = P7()
+
+    def test_initial_state(self):
+        """
+        Verify initial state.
+        """
+        draw(self.g, str(DRAW_DIR / "test7-case12-stage0.png"))
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 5
+        assert cnt.hyper == 6
+
+        p_edges = [e for e in self.g.hyperedges if e.hypertag == "P"]
+        assert len(p_edges) == 1
+        assert p_edges[0].r == 1
+
+        e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        assert all(e.r == 0 for e in e_edges)
+
+    def test_applying_production(self):
+        """
+        Verify graph after applying P7.
+        """
+        applied = self.g.apply(self.p7)
+        
+        draw(self.g, str(DRAW_DIR / "test7-case12-stage1.png"))
+
+        assert applied == 1, "Production P7 should be applied exactly once"
+
+        cnt = self.g.count_nodes()
+        assert cnt.normal == 5
+        assert cnt.hyper == 6
+
+        p_edges = [e for e in self.g.hyperedges if e.hypertag == "P"]
+        assert p_edges[0].r == 1, "P edge should retain r=1"
+
+        e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        for e in e_edges:
+            assert e.r == 1, f"All E edges must now have r=1. Found r={e.r}"
+        e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        for e in e_edges:
+            assert e.b == 0, f"All E edges must now have r=1. Found r={e.b}"
+
+

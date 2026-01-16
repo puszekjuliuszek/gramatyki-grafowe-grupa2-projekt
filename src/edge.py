@@ -22,8 +22,12 @@ class HyperEdge:
     b: int = 1
 
     def __post_init__(self):
-        if len(self.nodes) < 2:
-            raise ValueError("Hyperedge must connect at least 2 vertices")
+        # Wrap in a tuple if a single Node was passed
+        if isinstance(self.nodes, Node):
+            self.nodes = (self.nodes,)
+        
+        if len(self.nodes) < 1:
+            raise ValueError("At least one node is required.")
 
     @property
     def label(self) -> str:
