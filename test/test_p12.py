@@ -329,15 +329,6 @@ class TestP12Case6:
         assert all(e.r == 0 for e in e_edges_after)
         
 
-        # for old_e in self.e_edges:
-        #     matches = [
-        #         e for e in e_edges_after
-        #         if set(e.nodes) == set(old_e.nodes)
-        #     ]
-        #     assert matches
-        #     assert matches[0].r == old_e.r
-        #     assert matches[0].b == old_e.b
-
         # ---- T edge: r must flip to 1 ----
         t_edge = [e for e in self.g.hyperedges if e.hypertag == "T"]
         assert len(t_edge) == 1
