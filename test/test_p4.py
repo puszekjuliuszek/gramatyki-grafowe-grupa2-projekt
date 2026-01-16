@@ -172,7 +172,7 @@ class TestP4Case4:
         cnt = self.g.count_nodes()
 
         assert cnt.normal == 2, "Should be 2 regular nodes"
-        assert cnt.hyper == 1, "Should be 1 hyperedge (E)"
+        assert cnt.hyper == 1, "Should be 1 hyperedge"
         assert self.g.hyperedges[0].hypertag == "Q"
         assert self.g.hyperedges[0].r == 1
         assert self.g.hyperedges[0].b == 1
@@ -189,3 +189,45 @@ class TestP4Case4:
         assert self.g.hyperedges[0].hypertag == "Q"
         assert self.g.hyperedges[0].r == 1
         assert self.g.hyperedges[0].b == 1
+
+
+class TestP4Case5:
+    "Isomorphic graph, but wrong attribute B (B = 0 instead of B = 1)"
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+
+        n1 = Node(0, 0, "n1")
+        n2 = Node(0, 2, "n2")
+
+        self.g.add_node(n1)
+        self.g.add_node(n2)
+
+        self.g.add_edge(HyperEdge((n1, n2), "E", r=1, b=0))
+
+        self.p = P4()
+
+    def test_stage0(self):
+        draw(self.g, str(DRAW_DIR / "test4-case5-stage0.png"))
+
+        cnt = self.g.count_nodes()
+
+        assert cnt.normal == 2, "Should be 2 regular nodes"
+        assert cnt.hyper == 1, "Should be 1 hyperedge (E)"
+        assert self.g.hyperedges[0].hypertag == "E"
+        assert self.g.hyperedges[0].r == 1
+        assert self.g.hyperedges[0].b == 0
+
+    def test_stage1(self):
+        applied = self.g.apply(self.p)
+        draw(self.g, str(DRAW_DIR / "test4-case5-stage1.png"))
+
+        cnt = self.g.count_nodes()
+
+        assert applied == 0, "Production should not be applied"
+        assert cnt.normal == 2, "Should be 2 regular nodes"
+        assert cnt.hyper == 1, "Should be 1 hyperedge"
+        assert self.g.hyperedges[0].hypertag == "E"
+        assert self.g.hyperedges[0].r == 1
+        assert self.g.hyperedges[0].b == 0
