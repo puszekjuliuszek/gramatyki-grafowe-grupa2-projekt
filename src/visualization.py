@@ -29,15 +29,19 @@ def draw(graph: Graph, filename: str) -> None:
         pos[label] = (node.x, node.y)
         
         if data.get('is_hyper', False):
-            node_colors.append('red')
-            node_sizes.append(200)
+            node_sizes.append(400)
             if node.hyperref:
+                if node.hyperref.b == 1:
+                    print(node)
+                    node_colors.append('green')
+                else:
+                    node_colors.append('red')
                 labels[label] = f"{node.hyperref.hypertag}:{node.hyperref.r}"
             else:
                 labels[label] = label.split('_')[0]
         else:
             node_colors.append('lightblue')
-            node_sizes.append(500)
+            node_sizes.append(600)
             labels[label] = label
     
     nx.draw(
@@ -55,10 +59,16 @@ def draw(graph: Graph, filename: str) -> None:
     )
     
     legend_elements = [
-        plt.scatter([], [], c='lightblue', s=100, label='Node'),
+        plt.scatter([], [], c='lightblue', s=50, label='Node'),
         plt.scatter([], [], c='red', s=50, label='Hyperedge'),
+        plt.scatter([], [], c='green', s=50, label='Boundary edge')
     ]
-    ax.legend(handles=legend_elements, loc='upper right')
+    ax.legend(
+        handles=legend_elements,
+        loc='upper left',
+        bbox_to_anchor=(1.01, 1.0),
+        borderaxespad=0.0
+    )
     
     plt.title(f"Graph: {len(graph.nodes)} nodes, {len(graph.hyperedges)} hyperedges")
     plt.tight_layout()

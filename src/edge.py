@@ -19,7 +19,7 @@ class HyperEdge:
     nodes: Tuple[Node, ...]
     hypertag: str
     r: int = 0
-    b: int = 1
+    b: int = 0
 
     def __post_init__(self):
         if len(self.nodes) < 2:
