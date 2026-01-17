@@ -11,9 +11,15 @@ Left side:
 
 Right side:
     - Same nodes plus a new central vertex V at the centroid
-    - 4 new Q hyperedges (4 corner) all with R=0
-    - 4 new E hyperedges connecting midpoints to center
+    - 4 new Q hyperedges (all with R=0)
+    - 4 new E hyperedges connecting midpoints to center (all with R=0, B=0)
+
+Boundary attribute (B) handling:
+    - Existing outer E edges PRESERVE their B attribute (B=0 stays B=0, B=1 stays B=1)
+    - New internal E edges (midpoints to center) are always B=0 (they are internal)
+    - New Q hyperedges are always B=0 (element interiors are never boundaries)
 """
+
 
 from edge import HyperEdge
 from graph import Graph

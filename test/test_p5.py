@@ -15,8 +15,14 @@ def ensure_draw_dir():
     DRAW_DIR.mkdir(exist_ok=True)
 
 
-class TestP5Case1:
-    """Test: Basic quadrilateral with all edges broken."""
+class TestP5BasicApplication:
+    """
+    Test Case: Basic correct application.
+    
+    Checks if P5 correctly applies to a single, isolated quadrilateral 
+    where the Q hyperedge has R=1 and all E hyperedges have R=0.
+    All outer edges are boundary edges (b=1) since this is an isolated element.
+    """
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -37,23 +43,23 @@ class TestP5Case1:
         for node in [n1, n2, n3, n4, n5, n6, n7, n8]:
             self.g.add_node(node)
         
-        # E hyperedges (all R=0)
-        self.g.add_edge(HyperEdge((n1, n5), "E", r=0))
-        self.g.add_edge(HyperEdge((n5, n2), "E", r=0))
-        self.g.add_edge(HyperEdge((n2, n6), "E", r=0))
-        self.g.add_edge(HyperEdge((n6, n3), "E", r=0))
-        self.g.add_edge(HyperEdge((n3, n7), "E", r=0))
-        self.g.add_edge(HyperEdge((n7, n4), "E", r=0))
-        self.g.add_edge(HyperEdge((n4, n8), "E", r=0))
-        self.g.add_edge(HyperEdge((n8, n1), "E", r=0))
+        # E hyperedges (all R=0, all boundary b=1 since isolated element)
+        self.g.add_edge(HyperEdge((n1, n5), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n5, n2), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n2, n6), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n6, n3), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n3, n7), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n7, n4), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n4, n8), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n8, n1), "E", r=0, b=1))
         
         # Q hyperedge (R=1)
-        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1, b=0))
         
         self.p5 = P5()
 
     def test_before(self):
-        """Test input graph."""
+        """Test input graph structure before application."""
         draw(self.g, str(DRAW_DIR / "test5-case1-before.png"))
         
         q_edges = [e for e in self.g.hyperedges if e.hypertag == "Q"]
@@ -65,7 +71,14 @@ class TestP5Case1:
         assert all(e.r == 0 for e in e_edges)
 
     def test_after(self):
-        """Test after applying production."""
+        """
+        Test graph structure after application.
+        
+        Expectations:
+        - 1 central vertex V added.
+        - 4 new Q hyperedges created (all R=0).
+        - Total 9 nodes, 16 hyperedges.
+        """
         applied = self.g.apply(self.p5)
         
         draw(self.g, str(DRAW_DIR / "test5-case1-after.png"))
@@ -87,6 +100,18 @@ class TestP5Case1:
         q_edges = [e for e in self.g.hyperedges if e.hypertag == "Q"]
         assert len(q_edges) == 4, f"Should have 4 Q hyperedges, got {len(q_edges)}"
         assert all(e.r == 0 for e in q_edges), "All Q hyperedges should have r=0"
+        assert all(e.b == 0 for e in q_edges), "All Q hyperedges should have b=0"
+        
+        # Check E hyperedges - outer edges should preserve b=1, inner edges should be b=0
+        e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        v = [n for n in self.g.nodes if n.label.startswith("V_")][0]
+        outer_edges = [e for e in e_edges if v not in e.nodes]
+        inner_edges = [e for e in e_edges if v in e.nodes]
+        
+        assert len(outer_edges) == 8, f"Should have 8 outer edges, got {len(outer_edges)}"
+        assert all(e.b == 1 for e in outer_edges), "All outer edges should preserve b=1"
+        assert len(inner_edges) == 4, f"Should have 4 inner edges, got {len(inner_edges)}"
+        assert all(e.b == 0 for e in inner_edges), "All inner edges should have b=0"
         
         # Check central vertex exists
         v_nodes = [n for n in self.g.nodes if n.label.startswith("V_")]
@@ -96,8 +121,13 @@ class TestP5Case1:
         assert v.y == 2.0, f"V should be at y=2.0, got {v.y}"
 
 
-class TestP5Case2:
-    """Test: Q with R=0 - production should NOT apply."""
+class TestP5NoMatchQNotMarked:
+    """
+    Test Case: Production rejected due to Q attribute.
+    
+    Checks that P5 does NOT apply if the Q hyperedge has R=0 
+    (meaning it is not marked for refinement).
+    """
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -115,17 +145,17 @@ class TestP5Case2:
         for node in [n1, n2, n3, n4, n5, n6, n7, n8]:
             self.g.add_node(node)
         
-        self.g.add_edge(HyperEdge((n1, n5), "E", r=0))
-        self.g.add_edge(HyperEdge((n5, n2), "E", r=0))
-        self.g.add_edge(HyperEdge((n2, n6), "E", r=0))
-        self.g.add_edge(HyperEdge((n6, n3), "E", r=0))
-        self.g.add_edge(HyperEdge((n3, n7), "E", r=0))
-        self.g.add_edge(HyperEdge((n7, n4), "E", r=0))
-        self.g.add_edge(HyperEdge((n4, n8), "E", r=0))
-        self.g.add_edge(HyperEdge((n8, n1), "E", r=0))
+        self.g.add_edge(HyperEdge((n1, n5), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n5, n2), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n2, n6), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n6, n3), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n3, n7), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n7, n4), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n4, n8), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n8, n1), "E", r=0, b=1))
         
         # Q with R=0 (not marked for refinement)
-        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=0))
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=0, b=0))
         
         self.p5 = P5()
 
@@ -137,8 +167,13 @@ class TestP5Case2:
         assert applied == 0, "Production should not apply when Q has r=0"
 
 
-class TestP5Case3:
-    """Test: Not all edges broken - production should NOT apply."""
+class TestP5NoMatchEdgeNotBroken:
+    """
+    Test Case: Production rejected due to E attribute.
+    
+    Checks that P5 does NOT apply if any boundary edge E has R=1
+    (meaning the edge itself still needs refinement).
+    """
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -156,17 +191,17 @@ class TestP5Case3:
         for node in [n1, n2, n3, n4, n5, n6, n7, n8]:
             self.g.add_node(node)
         
-        # Some E edges with R=1 (not all broken)
-        self.g.add_edge(HyperEdge((n1, n5), "E", r=1))
-        self.g.add_edge(HyperEdge((n5, n2), "E", r=0))
-        self.g.add_edge(HyperEdge((n2, n6), "E", r=0))
-        self.g.add_edge(HyperEdge((n6, n3), "E", r=0))
-        self.g.add_edge(HyperEdge((n3, n7), "E", r=0))
-        self.g.add_edge(HyperEdge((n7, n4), "E", r=0))
-        self.g.add_edge(HyperEdge((n4, n8), "E", r=0))
-        self.g.add_edge(HyperEdge((n8, n1), "E", r=0))
+        # Some E edges with R=1 (not all broken) - first edge not broken yet
+        self.g.add_edge(HyperEdge((n1, n5), "E", r=1, b=1))
+        self.g.add_edge(HyperEdge((n5, n2), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n2, n6), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n6, n3), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n3, n7), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n7, n4), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n4, n8), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n8, n1), "E", r=0, b=1))
         
-        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1, b=0))
         
         self.p5 = P5()
 
@@ -178,8 +213,13 @@ class TestP5Case3:
         assert applied == 0, "Production should not apply when not all E have r=0"
 
 
-class TestP5Case4:
-    """Test: Two separate quadrilaterals, both ready for P5."""
+class TestP5MultipleConnectedComponents:
+    """
+    Test Case: Multiple instances applied independently.
+    
+    Checks if P5 applies correctly to two connected quadrilaterals.
+    Tests locality of the production and ability to handle larger graphs.
+    """
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -265,8 +305,12 @@ class TestP5Case4:
         assert len(v_nodes) == 2, f"Should have 2 central vertices, got {len(v_nodes)}"
 
 
-class TestP5Case5:
-    """Test: Quadrilateral missing a midpoint node."""
+class TestP5NoMatchMissingNode:
+    """
+    Test Case: Structurally invalid input (Missing Node).
+    
+    Checks that P5 does NOT apply if a required midpoint node is missing.
+    """
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -277,7 +321,7 @@ class TestP5Case5:
         n3 = Node(4, 4, "n3")
         n4 = Node(0, 4, "n4")
         
-        # Only 3 midpoints (missing one)
+        # Only 3 midpoints (missing n8)
         n5 = Node(2, 0, "n5")
         n6 = Node(4, 2, "n6")
         n7 = Node(2, 4, "n7")
@@ -306,8 +350,13 @@ class TestP5Case5:
         assert applied == 0, "Production should not apply when structure is incomplete"
 
 
-class TestP5Case6:
-    """Test: Distorted/Rotated quadrilateral."""
+class TestP5GeometricRobustness:
+    """
+    Test Case: Geometric Robustness.
+    
+    Checks if P5 applies correctly to a distorted (non-rectagonal) quadrilateral.
+    Verifies that the topological match works regardless of node positions.
+    """
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -365,3 +414,380 @@ class TestP5Case6:
         assert 1 < v.x < 6
         assert 1 < v.y < 5
 
+
+class TestP5BoundaryAttributes:
+    """
+    Test Case: Boundary Attribute (b) Preservation.
+    
+    Checks that the production preserves the 'b' attribute (boundary vs internal) 
+    of existing E edges.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+        
+        # Standard layout
+        n1 = Node(0, 0, "n1")
+        n2 = Node(2, 0, "n2")
+        n3 = Node(2, 2, "n3")
+        n4 = Node(0, 2, "n4")
+        n5 = Node(1, 0, "n5")
+        n6 = Node(2, 1, "n6")
+        n7 = Node(1, 2, "n7")
+        n8 = Node(0, 1, "n8")
+        
+        for node in [n1, n2, n3, n4, n5, n6, n7, n8]:
+            self.g.add_node(node)
+        
+        # E hyperedges with mixed b values
+        # Bottom edge (n1-n5-n2) is boundary (b=1)
+        self.g.add_edge(HyperEdge((n1, n5), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n5, n2), "E", r=0, b=1))
+        
+        # Right edge (n2-n6-n3) is internal (b=0)
+        self.g.add_edge(HyperEdge((n2, n6), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n6, n3), "E", r=0, b=0))
+        
+        # Top edge (n3-n7-n4) is boundary (b=1)
+        self.g.add_edge(HyperEdge((n3, n7), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n7, n4), "E", r=0, b=1))
+        
+        # Left edge (n4-n8-n1) is internal (b=0)
+        self.g.add_edge(HyperEdge((n4, n8), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n8, n1), "E", r=0, b=0))
+        
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
+        
+        self.p5 = P5()
+
+    def test_boundary_preservation(self):
+        """Test that b attributes are preserved on split edges."""
+        draw(self.g, str(DRAW_DIR / "test5-boundary-before.png"))
+        
+        applied = self.g.apply(self.p5)
+        
+        draw(self.g, str(DRAW_DIR / "test5-boundary-after.png"))
+        
+        assert applied == 1
+        
+        # Verify outer edges preserved their b values
+        # Helper to find edge by nodes (order insensitive)
+        def get_edge_b(u, v):
+            for e in self.g.hyperedges:
+                if e.hypertag == "E" and set(e.nodes) == {u, v}:
+                    return e.b
+            return None
+
+        nodes = {n.label: n for n in self.g.nodes}
+        n1, n2, n3, n4 = nodes["n1"], nodes["n2"], nodes["n3"], nodes["n4"]
+        n5, n6, n7, n8 = nodes["n5"], nodes["n6"], nodes["n7"], nodes["n8"]
+        
+        # Bottom (b=1)
+        assert get_edge_b(n1, n5) == 1
+        assert get_edge_b(n5, n2) == 1
+        
+        # Right (b=0)
+        assert get_edge_b(n2, n6) == 0
+        assert get_edge_b(n6, n3) == 0
+        
+        # Top (b=1)
+        assert get_edge_b(n3, n7) == 1
+        assert get_edge_b(n7, n4) == 1
+        
+        # Left (b=0)
+        assert get_edge_b(n4, n8) == 0
+        assert get_edge_b(n8, n1) == 0
+        
+        # Verify new internal edges (to center) are b=0
+        v = [n for n in self.g.nodes if n.label.startswith("V_")][0]
+        assert get_edge_b(n5, v) == 0
+        assert get_edge_b(n6, v) == 0
+        assert get_edge_b(n7, v) == 0
+        assert get_edge_b(n8, v) == 0
+
+
+class TestP5NegativeCases:
+    """
+    Test Case: Structural Invalidity (Missing Edge).
+    
+    Checks that P5 does NOT apply if a required E hyperedge is missing.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+        self.nodes = {}
+        
+        # Create full set of nodes
+        for i, (x, y) in enumerate([(0,0), (2,0), (2,2), (0,2), (1,0), (2,1), (1,2), (0,1)]):
+            n = Node(x, y, f"n{i+1}")
+            self.nodes[f"n{i+1}"] = n
+            self.g.add_node(n)
+        
+        self.p5 = P5()
+
+    def _add_edges(self, skip_edge_idx=None):
+        n = self.nodes
+        edges = [
+            (n["n1"], n["n5"]), (n["n5"], n["n2"]),
+            (n["n2"], n["n6"]), (n["n6"], n["n3"]),
+            (n["n3"], n["n7"]), (n["n7"], n["n4"]),
+            (n["n4"], n["n8"]), (n["n8"], n["n1"])
+        ]
+        
+        for i, (u, v) in enumerate(edges):
+            if skip_edge_idx is not None and i == skip_edge_idx:
+                continue
+            self.g.add_edge(HyperEdge((u, v), "E", r=0))
+            
+        self.g.add_edge(HyperEdge((n["n1"], n["n2"], n["n3"], n["n4"]), "Q", r=1))
+
+    def test_missing_edge(self):
+        """Production should not apply if one E edge is missing."""
+        self._add_edges(skip_edge_idx=0) # Skip first edge
+        
+        draw(self.g, str(DRAW_DIR / "test5-neg-missing-edge.png"))
+        applied = self.g.apply(self.p5)
+        assert applied == 0
+
+class TestP5BoundaryAttributes:
+    """Test: Preservation of boundary attributes (b=0/1)."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+        
+        # Standard layout
+        n1 = Node(0, 0, "n1")
+        n2 = Node(2, 0, "n2")
+        n3 = Node(2, 2, "n3")
+        n4 = Node(0, 2, "n4")
+        n5 = Node(1, 0, "n5")
+        n6 = Node(2, 1, "n6")
+        n7 = Node(1, 2, "n7")
+        n8 = Node(0, 1, "n8")
+        
+        for node in [n1, n2, n3, n4, n5, n6, n7, n8]:
+            self.g.add_node(node)
+        
+        # E hyperedges with mixed b values
+        # Bottom edge (n1-n5-n2) is boundary (b=1)
+        self.g.add_edge(HyperEdge((n1, n5), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n5, n2), "E", r=0, b=1))
+        
+        # Right edge (n2-n6-n3) is internal (b=0)
+        self.g.add_edge(HyperEdge((n2, n6), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n6, n3), "E", r=0, b=0))
+        
+        # Top edge (n3-n7-n4) is boundary (b=1)
+        self.g.add_edge(HyperEdge((n3, n7), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n7, n4), "E", r=0, b=1))
+        
+        # Left edge (n4-n8-n1) is internal (b=0)
+        self.g.add_edge(HyperEdge((n4, n8), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n8, n1), "E", r=0, b=0))
+        
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
+        
+        self.p5 = P5()
+
+    def test_boundary_preservation(self):
+        """Test that b attributes are preserved on split edges."""
+        draw(self.g, str(DRAW_DIR / "test5-boundary-before.png"))
+        
+        applied = self.g.apply(self.p5)
+        
+        draw(self.g, str(DRAW_DIR / "test5-boundary-after.png"))
+        
+        assert applied == 1
+        
+        # Verify outer edges preserved their b values
+        # Helper to find edge by nodes (order insensitive)
+        def get_edge_b(u, v):
+            for e in self.g.hyperedges:
+                if e.hypertag == "E" and set(e.nodes) == {u, v}:
+                    return e.b
+            return None
+
+        nodes = {n.label: n for n in self.g.nodes}
+        n1, n2, n3, n4 = nodes["n1"], nodes["n2"], nodes["n3"], nodes["n4"]
+        n5, n6, n7, n8 = nodes["n5"], nodes["n6"], nodes["n7"], nodes["n8"]
+        
+        # Bottom (b=1)
+        assert get_edge_b(n1, n5) == 1
+        assert get_edge_b(n5, n2) == 1
+        
+        # Right (b=0)
+        assert get_edge_b(n2, n6) == 0
+        assert get_edge_b(n6, n3) == 0
+        
+        # Top (b=1)
+        assert get_edge_b(n3, n7) == 1
+        assert get_edge_b(n7, n4) == 1
+        
+        # Left (b=0)
+        assert get_edge_b(n4, n8) == 0
+        assert get_edge_b(n8, n1) == 0
+        
+        # Verify new internal edges (to center) are b=0
+        v = [n for n in self.g.nodes if n.label.startswith("V_")][0]
+        assert get_edge_b(n5, v) == 0
+        assert get_edge_b(n6, v) == 0
+        assert get_edge_b(n7, v) == 0
+        assert get_edge_b(n8, v) == 0
+
+
+class TestP5NegativeCases:
+    """Test: Negative scenarios (missing edges/nodes)."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+        self.nodes = {}
+        
+        # Create full set of nodes
+        for i, (x, y) in enumerate([(0,0), (2,0), (2,2), (0,2), (1,0), (2,1), (1,2), (0,1)]):
+            n = Node(x, y, f"n{i+1}")
+            self.nodes[f"n{i+1}"] = n
+            self.g.add_node(n)
+        
+        self.p5 = P5()
+
+    def _add_edges(self, skip_edge_idx=None):
+        n = self.nodes
+        edges = [
+            (n["n1"], n["n5"]), (n["n5"], n["n2"]),
+            (n["n2"], n["n6"]), (n["n6"], n["n3"]),
+            (n["n3"], n["n7"]), (n["n7"], n["n4"]),
+            (n["n4"], n["n8"]), (n["n8"], n["n1"])
+        ]
+        
+        for i, (u, v) in enumerate(edges):
+            if skip_edge_idx is not None and i == skip_edge_idx:
+                continue
+            self.g.add_edge(HyperEdge((u, v), "E", r=0))
+            
+        self.g.add_edge(HyperEdge((n["n1"], n["n2"], n["n3"], n["n4"]), "Q", r=1))
+
+    def test_missing_edge(self):
+        """Production should not apply if one E edge is missing."""
+        self._add_edges(skip_edge_idx=0) # Skip first edge
+        
+        draw(self.g, str(DRAW_DIR / "test5-neg-missing-edge.png"))
+        applied = self.g.apply(self.p5)
+        assert applied == 0
+
+
+class TestP5AllBoundaryEdges:
+    """
+    Test Case: All edges are boundary edges (b=1).
+    
+    Verifies that P5 applies correctly when all outer edges are
+    boundary edges and that these b=1 values are preserved.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+        
+        n1 = Node(0, 0, "n1")
+        n2 = Node(2, 0, "n2")
+        n3 = Node(2, 2, "n3")
+        n4 = Node(0, 2, "n4")
+        n5 = Node(1, 0, "n5")
+        n6 = Node(2, 1, "n6")
+        n7 = Node(1, 2, "n7")
+        n8 = Node(0, 1, "n8")
+        
+        for node in [n1, n2, n3, n4, n5, n6, n7, n8]:
+            self.g.add_node(node)
+        
+        # All edges are boundary (b=1)
+        self.g.add_edge(HyperEdge((n1, n5), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n5, n2), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n2, n6), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n6, n3), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n3, n7), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n7, n4), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n4, n8), "E", r=0, b=1))
+        self.g.add_edge(HyperEdge((n8, n1), "E", r=0, b=1))
+        
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
+        
+        self.p5 = P5()
+
+    def test_all_boundary_edges(self):
+        """Production should apply and preserve b=1 on all outer edges."""
+        draw(self.g, str(DRAW_DIR / "test5-all-boundary-before.png"))
+        
+        applied = self.g.apply(self.p5)
+        
+        draw(self.g, str(DRAW_DIR / "test5-all-boundary-after.png"))
+        
+        assert applied == 1, "Production should apply regardless of b values"
+        
+        # All outer edges should still have b=1
+        outer_edges = [e for e in self.g.hyperedges 
+                       if e.hypertag == "E" and not any(n.label.startswith("V_") for n in e.nodes)]
+        assert all(e.b == 1 for e in outer_edges), "All outer edges should have b=1"
+        
+        # New internal edges (to center) should have b=0
+        v = [n for n in self.g.nodes if n.label.startswith("V_")][0]
+        internal_edges = [e for e in self.g.hyperedges 
+                          if e.hypertag == "E" and v in e.nodes]
+        assert len(internal_edges) == 4, "Should have 4 internal edges"
+        assert all(e.b == 0 for e in internal_edges), "All internal edges should have b=0"
+
+
+class TestP5AllInternalEdges:
+    """
+    Test Case: All edges are internal edges (b=0).
+    
+    Verifies that P5 applies correctly when all outer edges are
+    internal edges and that these b=0 values are preserved.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.g = Graph()
+        
+        n1 = Node(0, 0, "n1")
+        n2 = Node(2, 0, "n2")
+        n3 = Node(2, 2, "n3")
+        n4 = Node(0, 2, "n4")
+        n5 = Node(1, 0, "n5")
+        n6 = Node(2, 1, "n6")
+        n7 = Node(1, 2, "n7")
+        n8 = Node(0, 1, "n8")
+        
+        for node in [n1, n2, n3, n4, n5, n6, n7, n8]:
+            self.g.add_node(node)
+        
+        # All edges are internal (b=0)
+        self.g.add_edge(HyperEdge((n1, n5), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n5, n2), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n2, n6), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n6, n3), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n3, n7), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n7, n4), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n4, n8), "E", r=0, b=0))
+        self.g.add_edge(HyperEdge((n8, n1), "E", r=0, b=0))
+        
+        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
+        
+        self.p5 = P5()
+
+    def test_all_internal_edges(self):
+        """Production should apply and preserve b=0 on all edges."""
+        draw(self.g, str(DRAW_DIR / "test5-all-internal-before.png"))
+        
+        applied = self.g.apply(self.p5)
+        
+        draw(self.g, str(DRAW_DIR / "test5-all-internal-after.png"))
+        
+        assert applied == 1, "Production should apply regardless of b values"
+        
+        # All E edges should have b=0 (outer preserved, new are also b=0)
+        e_edges = [e for e in self.g.hyperedges if e.hypertag == "E"]
+        assert all(e.b == 0 for e in e_edges), "All edges should have b=0"
