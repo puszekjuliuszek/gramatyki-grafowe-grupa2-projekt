@@ -14,9 +14,11 @@ Projekt - gramatyki grafowe.
 │   ├── visualization.py     # Funkcje do wizualizacji grafów
 │   └── productions/
 │       ├── production.py    # Interfejs Production
-│       └── p0.py            # Przykładowa produkcja P0
+│       ├── p0.py            # Przykładowa produkcja P0
+│       └── p5.py            # Produkcja P5
 ├── test/
-│   └── test_p0.py           # Testy dla produkcji P0
+│   ├── test_p0.py           # Testy dla produkcji P0
+│   └── test_p5.py           # Testy dla produkcji P5
 ├── draw/                    # Folder na wizualizacje grafów
 ├── pyproject.toml           # Konfiguracja projektu (Poetry)
 └── test_run.sh              # Skrypt do uruchamiania testów
@@ -56,6 +58,7 @@ Klasa `Graph` jest zbudowana na bibliotece `networkx`. Ponieważ networkx nie ws
 ## Jak implementować produkcje
 
 Każda produkcja dziedziczy po klasie `Production` i implementuje dwie metody:
+
 - `get_left_side()` - wzorzec do dopasowania
 - `get_right_side(left)` - wynik transformacji
 - `filter_match(matched_graph)` - dodatkowe sprawdzanie, czy produkcję można zaaplikować (np. wartość atrybutu krawędzi)
@@ -67,11 +70,13 @@ Testy używają `pytest`. Każdy przypadek testowy używa fixture do przygotowan
 ## Atrybuty węzłów i hiperkrawędzi
 
 ### Node
+
 - `x`, `y` - współrzędne
 - `label` - unikalna etykieta
 - `hyperref` - referencja do hiperkrawędzi (dla węzłów reprezentujących hiperkrawędzie)
 
 ### HyperEdge
+
 - `nodes` - krotka połączonych węzłów
 - `hypertag` - typ hiperkrawędzi ("E", "Q", etc.)
 - `r` - parametr R używany podczas tworzenia siatki
