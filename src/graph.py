@@ -25,9 +25,20 @@ class Graph:
         self._graph = nx.Graph()
         self._nodes: dict[str, Node] = {}
         self._hyperedges: dict[str, HyperEdge] = {}
+        self._next_node_id = 1
     
     def add_node(self, node: Node) -> None:
-        """Adds a vertex to the graph."""
+        if node.label == "":
+            node.label = f"n{self._next_node_id}"
+            self._next_node_id += 1
+        else:
+            if node.label.startswith("n"):
+                try:
+                    num = int(node.label[1:])
+                    self._next_node_id = max(self._next_node_id, num + 1)
+                except ValueError:
+                    pass
+
         self._nodes[node.label] = node
         self._graph.add_node(node.label, node=node, is_hyper=False)
     
