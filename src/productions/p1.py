@@ -80,11 +80,7 @@ class P1(Production):
 
         for edge in left.hyperedges:
             if edge.hypertag == "E":
-<<<<<<< HEAD
-                g.add_edge(HyperEdge(edge.nodes, "E", r=1), check_nodes=False)
-=======
                 g.add_edge(HyperEdge(edge.nodes, "E", r=1, b=edge.b), check_nodes=False)
->>>>>>> 3595051 (Add p1 production and tests)
             elif edge.hypertag == "Q":
                 g.add_edge(HyperEdge(edge.nodes, "Q", r=edge.r), check_nodes=False)
 
