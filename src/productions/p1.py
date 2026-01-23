@@ -62,7 +62,7 @@ class P1(Production):
         g.add_edge(HyperEdge((n3, n4), "E"))
         g.add_edge(HyperEdge((n4, n1), "E"))
 
-        g.add_edge(HyperEdge((n1, n2, n3, n4), "Q"))
+        g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
 
         return g
 
@@ -80,11 +80,7 @@ class P1(Production):
 
         for edge in left.hyperedges:
             if edge.hypertag == "E":
-<<<<<<< HEAD
-                g.add_edge(HyperEdge(edge.nodes, "E", r=1), check_nodes=False)
-=======
                 g.add_edge(HyperEdge(edge.nodes, "E", r=1, b=edge.b), check_nodes=False)
->>>>>>> 3595051 (Add p1 production and tests)
             elif edge.hypertag == "Q":
                 g.add_edge(HyperEdge(edge.nodes, "Q", r=edge.r), check_nodes=False)
 
@@ -92,6 +88,9 @@ class P1(Production):
 
     def filter_match(self, matched_graph: Graph) -> bool:
         """Only match if there is at least one E edge with r!=1."""
+        for edge in matched_graph.hyperedges:
+            if edge.hypertag == "Q" and edge.r != 1:
+                return False
         for edge in matched_graph.hyperedges:
             if edge.hypertag == "E" and edge.r != 1:
                 return True
