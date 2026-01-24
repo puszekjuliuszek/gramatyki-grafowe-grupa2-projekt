@@ -1,28 +1,26 @@
 """
-Production P1
+Production P0
 
 Left side: Four nodes connected by E hyperedges forming a square,
            with a Q hyperedge in the middle connecting all 4 nodes.
-           The Q hyperedge has r=r0.
+           The Q hyperedge has r=0.
 
-Right side: Same structure but all hyperedges E have r=1.
+Right side: Same structure but Q hyperedge has r=1.
 
 Example:
-         r=r3
     n1 ---E--- n2
     |          |
-r=r2E    Q     E r=r1
-    |   r=r0   |
+    E    Q     E
+    |   r=0    |
     n4 ---E--- n3
-         r=r4
+
     is transformed into:
-         r=1
+
     n1 ---E--- n2
     |          |
-r=1 E    Q     E r=1
-    |   r=r0   |
+    E    Q     E
+    |   r=1    |
     n4 ---E--- n3
-         r=1
 """
 
 from edge import HyperEdge
@@ -32,9 +30,11 @@ from productions.production import Production
 
 
 @Production.register
-class P1(Production):
+class P0(Production):
     """
-    Production P1 - set boundary edges r=1.
+    Production P0 - mark quadrilateral for processing.
+
+    Changes r attribute of Q hyperedge from 0 to 1.
     """
 
     def get_left_side(self) -> Graph:
@@ -43,7 +43,7 @@ class P1(Production):
 
         Returns:
             Graph with 4 nodes in a square, connected by E edges,
-            with Q hyperedge in the middle.
+            with Q hyperedge (r=0) in the middle.
         """
         g = Graph()
 
@@ -74,24 +74,38 @@ class P1(Production):
             left: Matched subgraph (with current coordinates)
 
         Returns:
-            Graph with same structure but E hyperedges changed to r=1
+            Graph with same structure but Q hyperedge changed to r=1
         """
         g = Graph()
 
+        nodes = []
+        for node in left.ordered_nodes:
+            if node.hyperref is None:
+                nodes.append(node)
+
+        # Preserve ALL hyperedges from the matched graph
         for edge in left.hyperedges:
-            if edge.hypertag == "E":
-                g.add_edge(HyperEdge(edge.nodes, "E", r=1, b=edge.b), check_nodes=False)
-            elif edge.hypertag == "Q":
-                g.add_edge(HyperEdge(edge.nodes, "Q", r=edge.r), check_nodes=False)
+            if edge.hypertag == "Q":
+                # Skip Q edges - we'll add the modified one
+                continue
+            else:
+                # Preserve all other edges (E, P, etc.)
+                g.add_edge(HyperEdge(edge.nodes, edge.hypertag, r=edge.r, b=edge.b), check_nodes=False)
+
+        # Add the Q hyperedge with r=1
+        g.add_edge(HyperEdge(tuple(nodes), "Q", r=1), check_nodes=False)
 
         return g
 
     def filter_match(self, matched_graph: Graph) -> bool:
-        """Only match if there is at least one E edge with r!=1."""
+        """Only match Q hyperedges with r=0."""
+        
         for edge in matched_graph.hyperedges:
-            if edge.hypertag == "E" and edge.r != 1:
-                for node in matched_graph.nodes:
-                    if node.label == "n5":
-                        return True
+            if edge.hypertag == "Q" and edge.r != 0:
                 return False
+        # return self.can_apply(matched_graph)
+        for node in matched_graph.nodes:
+            if node.label == "n5":
+                return True
         return False
+    

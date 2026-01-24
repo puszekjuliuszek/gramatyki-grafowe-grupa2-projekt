@@ -100,7 +100,7 @@ class P5(Production):
         # New E hyperedges to center
         # Mapping: n5->bottom, n6->right, n7->top, n8->left (relative to pattern)
         for mp in [n5, n6, n7, n8]:
-            g.add_edge(HyperEdge((mp, v), "E", r=0, b=0), check_nodes=False)
+            g.add_edge(HyperEdge((mp, v), "E", r=0, b=1), check_nodes=False)
         
         # 5 new Q hyperedges
         g.add_edge(HyperEdge((n1, n5, v, n8), "Q", r=0, b=0), check_nodes=False)

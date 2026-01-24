@@ -88,7 +88,7 @@ class Graph:
     def hyperedges(self) -> List[HyperEdge]:
         """Returns list of all hyperedges."""
         return list(self._hyperedges.values())
-    
+
     @property
     def ordered_nodes(self) -> List[Node]:
         """
@@ -144,6 +144,10 @@ class Graph:
         Returns:
             Number of times the production was applied
         """
+        # # Check if production can be applied to this graph
+        # if not production.can_apply(self):
+        #     return 0
+            
         left = production.get_left_side()
         applied_count = 0
         

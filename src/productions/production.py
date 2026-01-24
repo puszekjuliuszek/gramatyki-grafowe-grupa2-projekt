@@ -60,3 +60,10 @@ class Production(ABC):
             True if the match should be accepted, False to reject
         """
         return True
+
+    # def can_apply(self, graph: Graph) -> bool:
+    #     pass
+        # for node in graph.nodes:
+        #     if node.label == "n5":
+        #         return True
+        # return False
