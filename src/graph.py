@@ -195,5 +195,48 @@ class Graph:
         
         return applied_count
     
+    def apply_one(self, production, node_name_1, node_name_2=None):
+        # use production if in subgraph is node_name for example e_6
+        left = production.get_left_side()
+        matches = self.find_subgraph_isomorphisms(left)
+        if not matches:
+            return False
+        match = None
+        matched_graph = None
+        for candidate in matches:
+            valid = all(self._graph.has_node(graph_label) for graph_label in candidate.keys())
+            if not valid:
+                continue
+            candidate_graph = Graph()
+            for graph_label, pattern_label in candidate.items():
+                node_data = self._graph.nodes[graph_label]
+                candidate_graph._graph.add_node(pattern_label, **node_data)
+                if not node_data.get('is_hyper', False):
+                    candidate_graph._nodes[pattern_label] = node_data['node']
+                else:
+                    candidate_graph._hyperedges[pattern_label] = node_data.get('hyperedge')
+            if production.filter_match(candidate_graph):
+                if node_name_1 in candidate:
+                    if node_name_2 is not None and node_name_2 not in candidate:
+                        continue
+                    match = candidate
+                    matched_graph = candidate_graph
+                    break
+        if match is None:
+            return False
+        right = production.get_right_side(matched_graph)
+        inv_match = {v: k for k, v in match.items()}
+        for label, data in left._graph.nodes(data=True):
+            if data.get('is_hyper', False):
+                graph_label = inv_match[label]
+                self.remove_node(graph_label)
+        for node in right.nodes:
+            if node.label not in self._nodes:
+                self.add_node(node)
+        for edge in right.hyperedges:
+            self.add_edge(edge, check_nodes=False)
+        return True
+
+
     def __repr__(self):
         return f"Graph(nodes={len(self._nodes)}, hyperedges={len(self._hyperedges)})"

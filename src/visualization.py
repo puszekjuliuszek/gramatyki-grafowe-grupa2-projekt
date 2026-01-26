@@ -17,7 +17,7 @@ def draw(graph: Graph, filename: str) -> None:
         graph: Graph to draw
         filename: Path to output file (e.g., "draw/test1.png")
     """
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(15, 15))
     
     pos = {}
     node_colors = []
@@ -72,7 +72,7 @@ def draw(graph: Graph, filename: str) -> None:
     
     plt.title(f"Graph: {len(graph.nodes)} nodes, {len(graph.hyperedges)} hyperedges")
     plt.tight_layout()
-    plt.savefig(filename, dpi=150)
+    plt.savefig(filename, dpi=300)
     plt.close()
     
     print(f"Saved graph to: {filename}")
