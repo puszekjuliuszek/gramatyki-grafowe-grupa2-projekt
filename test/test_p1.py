@@ -244,8 +244,7 @@ class TestP1Case4:
                 assert edge.r == 1
 
         assert self.g.apply(p1) == 0
-<<<<<<< HEAD
-=======
+
 
 class TestP1Case5:
     """
@@ -450,4 +449,3 @@ class TestP1Case8:
         
         # Applying again should return 0
         assert self.g.apply(p1) == 0
->>>>>>> 3595051 (Add p1 production and tests)
