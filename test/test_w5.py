@@ -61,7 +61,7 @@ class TestW5:
         p6.P6().apply(self.g)
         draw(self.g, str(DRAW_DIR / "test_w5-stage1.png"))
 
-        self.g.apply(p0.P0())
+        self.g.apply_one(p0.P0(), "n5")
         draw(self.g, str(DRAW_DIR / "test_w5-stage2.png"))
 
         self.g.apply(p7.P7())
@@ -76,3 +76,4 @@ class TestW5:
         self.g.apply(p8.P8())
         draw(self.g, str(DRAW_DIR / "test_w5-stage6.png"))
 
+        # TODO: further steps and report
