@@ -25,7 +25,7 @@ g = Graph()
 # -----------------
 # Outer contour (7 nodes)
 # -----------------
-n1  = Node(12, 3, "n1")
+n1  = Node(15, 3, "n1")
 n2  = Node(9, 0, "n2")
 n3  = Node(1, 0, "n3")
 n4  = Node(0, 2, "n4")
@@ -140,10 +140,9 @@ p6_applied = p6.apply(g)
 print(f"P6 applied: {p6_applied}")
 draw_step(g, "1")
 
-# Oznacz dolny czworokąt do rozbicia
-# TODO: to musi się aplikować deterministycznie do dolnego czworokąta, nie do górnego
+# Oznacz dolny czworokąt do rozbicia (deterministycznie; patrzymy na label 'n2')
 p0 = P0()
-p0_applied = g.apply(p0)
+p0_applied = g.apply(p0, True)
 print(f"P0 applied: {p0_applied}")
 draw_step(g, "2")
 
@@ -167,7 +166,6 @@ while p4_applied:
     i += 1
 
 # Złam krawędzie wewnętrzne (dopóki się da)
-# TODO: łamanie krawędzie powoduje powstanie nowego wierzchołka na istniejącej krawędzi, co jest nieczytelne; poprawić to jakoś
 i = 0
 p3_applied = True
 while p3_applied:
@@ -223,16 +221,6 @@ p5_applied = g.apply(p5)
 print(f"P5 applied: {p5_applied}")
 draw_step(g, "11")
 
-# Oznacz dwa czworokąty przy naszym "punkcie do którego łamiemy" do złamania
-# TODO: jakoś to zrobić deterministycznie, a nie losowo; no i żeby to były te dwa właściwe czworokąty
-p0 = P0()
-p0_applied_1 = g.apply(p0)
-print(f"P0 applied (1): {p0_applied_1}")
-draw_step(g, "12_1")
-p0_applied_2 = g.apply(p0)
-print(f"P0 applied (2): {p0_applied_2}")
-draw_step(g, "12_2")
-
 # Co będzie w pętli (mam nadzieję, że dobrze zrozumiałem zadanie i się nie machnąłem, więc mnie sprawdźcie):
 ## Zaznacz oba czworokąty przy "punkcie, do którego łamiemy" do złamania (P0)
 ## Zaznacz krawędzie jednego oznaczonego czworokąta do złamania (P1)
@@ -245,3 +233,97 @@ draw_step(g, "12_2")
 ## Złam krawędzie wewnętrzne niezłamane przez figury sąsiednie (P3)
 ## Złam czworokąt (P5)
 ## I tak w koło Macieju (to, ile razy ta pętla się obróci, możemy zadać np. parametrem na początku skryptu)
+
+# -----------------
+# Pętla końcowa (do sprawdzenia)
+# -----------------
+
+NUM_ITERS = 1
+step_counter = 12
+
+for it in range(NUM_ITERS):
+    print(f"\n=== LOOP ITERATION {it+1} ===")
+
+    # --- 1. Oznacz OBA czworokąty do złamania ---
+    p0 = P0()
+    p0_applied_1 = g.apply(p0, True)
+    print(f"P0 applied: {p0_applied_1}")
+    draw_step(g, f"{step_counter}_p0")
+    step_counter += 1
+
+    p0_applied_2 = g.apply(p0, True)
+    print(f"P0 applied: {p0_applied_2}")
+    draw_step(g, f"{step_counter}_p0")
+    step_counter += 1
+
+    # =====================================================
+    # --- 2. Rozbij pierwszy oznaczony czworokąt ---
+    # =====================================================
+
+    p1 = P1()
+    p1_applied = g.apply(p1)
+    print(f"P1 applied: {p1_applied}")
+    draw_step(g, f"{step_counter}_p1")
+    step_counter += 1
+
+    # krawędzie brzegowe
+    while True:
+        p4 = P4()
+        if not g.apply(p4):
+            break
+        draw_step(g, f"{step_counter}_p4")
+        step_counter += 1
+
+    # krawędzie wewnętrzne
+    while True:
+        p3 = P3()
+        if not g.apply(p3):
+            break
+        draw_step(g, f"{step_counter}_p3")
+        step_counter += 1
+
+    p5 = P5()
+    p5_applied = g.apply(p5)
+    print(f"P5 applied: {p5_applied}")
+    draw_step(g, f"{step_counter}_p5")
+    step_counter += 1
+
+    # =====================================================
+    # --- 3. Rozbij drugi oznaczony czworokąt ---
+    # =====================================================
+
+    p1 = P1()
+    p1_applied = g.apply(p1)
+    print(f"P1 applied: {p1_applied}")
+    draw_step(g, f"{step_counter}_p1")
+    step_counter += 1
+
+    # krawędzie brzegowe
+    while True:
+        p4 = P4()
+        if not g.apply(p4):
+            break
+        draw_step(g, f"{step_counter}_p4")
+        step_counter += 1
+
+    # krawędzie wspólne
+    p2 = P2()
+    p2_applied = p2.apply(g)
+    print(f"P2 applied: {p2_applied}")
+    draw_step(g, f"{step_counter}_p2")
+    step_counter += 1
+
+    # krawędzie wewnętrzne
+    while True:
+        p3 = P3()
+        if not g.apply(p3):
+            break
+        draw_step(g, f"{step_counter}_p3")
+        step_counter += 1
+
+    p5 = P5()
+    p5_applied = g.apply(p5)
+    print(f"P5 applied (quad B): {p5_applied}")
+    draw_step(g, f"{step_counter}_p5")
+    step_counter += 1
+

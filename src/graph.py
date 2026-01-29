@@ -137,7 +137,7 @@ class Graph:
         if self._graph.has_node(label):
             self._graph.remove_node(label)
     
-    def apply(self, production: 'Production', filter_to_my_mode: bool = True) -> bool:
+    def apply(self, production: 'Production', filter_to_my_mode: bool = False) -> bool:
         """
         Applies a production to the graph once (at most).
 
