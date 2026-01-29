@@ -4,10 +4,12 @@ from edge import HyperEdge
 from graph import Graph
 from visualization import draw
 from productions.p0 import P0
+from productions.p1 import P1
 from productions.p3 import P3
 from productions.p4 import P4
 from productions.p6 import P6
 from productions.p7 import P7
+from productions.p8 import P8
 
 DRAW_DIR = Path(__file__).parent.parent / "draw" / "group7_prod"
 DRAW_DIR.mkdir(exist_ok=True)
@@ -175,3 +177,15 @@ while p3_applied:
         break
     draw_step(g, f"5_{i+1}")
     i += 1
+
+# Złam pięciokąt
+p8 = P8()
+p8_applied = g.apply(p8)
+print(f"P8 applied: {p8_applied}")
+draw_step(g, "6")
+
+# Zaznacz krawędzie czworokąta do złamania
+p1 = P1()
+p1_applied = g.apply(p1)
+print(f"P1 applied: {p1_applied}")
+draw_step(g, "7")

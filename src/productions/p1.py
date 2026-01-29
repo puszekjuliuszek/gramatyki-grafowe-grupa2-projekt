@@ -88,7 +88,15 @@ class P1(Production):
 
     def filter_match(self, matched_graph: Graph) -> bool:
         """Only match if there is at least one E edge with r!=1."""
+        has_E_not_1 = False
+        has_Q_eq_1 = False
+
         for edge in matched_graph.hyperedges:
             if edge.hypertag == "E" and edge.r != 1:
+                has_E_not_1 = True
+            elif edge.hypertag == "Q" and edge.r == 1:
+                has_Q_eq_1 = True
+
+            if has_E_not_1 and has_Q_eq_1:
                 return True
         return False
