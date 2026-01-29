@@ -8,10 +8,10 @@ Left side: A hexagonal element consisting of 6 outer nodes:
 Right side: Same structure but E hyperedges has r=1.
 """
 
-from src.edge import HyperEdge
-from src.graph import Graph
-from src.node import Node
-from src.productions.production import Production
+from edge import HyperEdge
+from graph import Graph
+from node import Node
+from productions.production import Production
 
 
 @Production.register
@@ -66,7 +66,4 @@ class P10(Production):
             if edge.hypertag == "S" and edge.r != 1:
                 return False
         
-        for edge in matched_graph.hyperedges:
-            if edge.hypertag == "E" and edge.r != 0:
-                return False
         return True

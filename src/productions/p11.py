@@ -6,6 +6,9 @@ from productions.production import Production
 
 @Production.register
 class P11(Production):
+    
+    _counter = 0
+
     def get_left_side(self) -> Graph:
         g = Graph()
 
@@ -44,13 +47,14 @@ class P11(Production):
         for node in left.ordered_nodes:
             if node.hyperref is None:
                 nodes.append(node)
-
+        
         center_nodes = [nodes[0], nodes[2], nodes[4], nodes[6], nodes[8], nodes[10]]
         sum_x = sum(n.x for n in center_nodes)
         sum_y = sum(n.y for n in center_nodes)
-        center = Node(sum_x/6, sum_y/6, "center")
+        
+        P11._counter += 1
+        center = Node(sum_x/6, sum_y/6, f"center_{P11._counter}")
         g.add_node(center)
-
 
         for edge in left.hyperedges:
             if edge.hypertag == "E":

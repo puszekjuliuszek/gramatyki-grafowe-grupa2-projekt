@@ -1,14 +1,7 @@
-"""
-Production P4
-
-Breaks boundary edges (E with b=1) marked for refinement (r=1)
-"""
-
 from edge import HyperEdge
 from graph import Graph
 from node import Node
 from productions.production import Production
-from time import time
 
 
 @Production.register
@@ -18,6 +11,8 @@ class P4(Production):
 
     Breaks boundary edges (E with b=1) marked for refinement (r=1)
     """
+    
+    _counter = 0
 
     def get_left_side(self) -> Graph:
         """
@@ -34,7 +29,7 @@ class P4(Production):
         g.add_node(n1)
         g.add_node(n2)
 
-        g.add_edge(HyperEdge((n1, n2), "E", r=1))
+        g.add_edge(HyperEdge((n1, n2), "E", r=1, b=1))
 
         return g
 
@@ -54,7 +49,9 @@ class P4(Production):
 
         new_x = (nodes[0].x + nodes[1].x) / 2
         new_y = (nodes[0].y + nodes[1].y) / 2
-        new_node = Node(new_x, new_y, f"n{time()}")
+        
+        P4._counter += 1
+        new_node = Node(new_x, new_y, f"n_p4_{P4._counter}")
         nodes.append(new_node)
 
         for node in nodes:

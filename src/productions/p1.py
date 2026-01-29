@@ -62,7 +62,7 @@ class P1(Production):
         g.add_edge(HyperEdge((n3, n4), "E"))
         g.add_edge(HyperEdge((n4, n1), "E"))
 
-        g.add_edge(HyperEdge((n1, n2, n3, n4), "Q"))
+        g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
 
         return g
 

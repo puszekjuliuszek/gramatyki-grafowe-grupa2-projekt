@@ -104,12 +104,12 @@ class Graph:
         """Counts nodes in the graph by type."""
         return NodeCount(normal=len(self._nodes), hyper=len(self._hyperedges))
     
-    def find_subgraph_isomorphisms(self, pattern: 'Graph') -> List[dict]:
+    def find_subgraph_isomorphisms(self, pattern: 'Graph') -> Iterator[dict]:
         """
         Finds all subgraph isomorphisms (pattern matches).
 
         Returns:
-            List of dictionaries mapping pattern labels to graph labels
+            Iterator of dictionaries mapping pattern labels to graph labels
         """
         def node_match(n1, n2):
             if n1.get('is_hyper') != n2.get('is_hyper'):
@@ -118,7 +118,7 @@ class Graph:
                 e1 = n1.get('hyperedge')
                 e2 = n2.get('hyperedge')
                 if e1 and e2:
-                    return e1.hypertag == e2.hypertag
+                    return e1.hypertag == e2.hypertag and e1.r == e2.r
             return True
 
         matcher = nx.algorithms.isomorphism.GraphMatcher(
@@ -126,7 +126,7 @@ class Graph:
             pattern._graph,
             node_match=node_match
         )
-        return list(matcher.subgraph_isomorphisms_iter())
+        return matcher.subgraph_isomorphisms_iter()
     
     def remove_node(self, label: str) -> None:
         """Removes a node from the graph."""
@@ -149,9 +149,7 @@ class Graph:
         
         while True:
             matches = self.find_subgraph_isomorphisms(left)
-            if not matches:
-                break
-
+            
             match = None
             matched_graph = None
             for candidate in matches:

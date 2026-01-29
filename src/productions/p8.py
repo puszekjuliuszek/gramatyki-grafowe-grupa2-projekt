@@ -9,7 +9,6 @@ from edge import HyperEdge
 from graph import Graph
 from node import Node
 from productions.production import Production
-from time import time
 
 
 @Production.register
@@ -20,6 +19,8 @@ class P8(Production):
     Breaks the pentagonal element (hypertag == P) marked for refinement (r == 1),
     replacing it with 5 Q and 5 E hyperedges.
     """
+    
+    _counter = 0
 
     def get_left_side(self) -> Graph:
         """
@@ -77,7 +78,9 @@ class P8(Production):
 
         new_x = sum([node.x for node in line_nodes]) / 5
         new_y = sum([node.y for node in line_nodes]) / 5
-        new_node = Node(new_x, new_y, f"n{time()}")
+        
+        P8._counter += 1
+        new_node = Node(new_x, new_y, f"n_p8_{P8._counter}")
 
         for node in nodes + [new_node]:
             g.add_node(node)

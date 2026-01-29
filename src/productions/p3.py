@@ -16,7 +16,7 @@ class P3(Production):
         g.add_node(n1)
         g.add_node(n2)
 
-        g.add_edge(HyperEdge((n1, n2), "E"))
+        g.add_edge(HyperEdge((n1, n2), "E", r=1, b=0))
 
         return g
 
