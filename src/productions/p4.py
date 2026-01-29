@@ -54,7 +54,7 @@ class P4(Production):
 
         new_x = (nodes[0].x + nodes[1].x) / 2
         new_y = (nodes[0].y + nodes[1].y) / 2
-        new_node = Node(new_x, new_y, f"n{time()}")
+        new_node = Node(new_x, new_y, f"n_{nodes[0].label}_{nodes[1].label}")
         nodes.append(new_node)
 
         for node in nodes:

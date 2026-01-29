@@ -85,7 +85,7 @@ class P5(Production):
         corner_labels = "_".join(sorted(n.label for n in corners))
         v_x = sum(n.x for n in corners) / 4
         v_y = sum(n.y for n in corners) / 4
-        v = Node(v_x, v_y, f"V_{corner_labels}")
+        v = Node(v_x, v_y, f"n_{corner_labels}")
         
         # Add all nodes
         for node in [n1, n2, n3, n4, n5, n6, n7, n8]:
