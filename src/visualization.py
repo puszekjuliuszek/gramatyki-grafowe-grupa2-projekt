@@ -32,7 +32,7 @@ def draw(graph: Graph, filename: str) -> None:
             node_sizes.append(400)
             if node.hyperref:
                 if node.hyperref.b == 1:
-                    print(node)
+                    # print(node)
                     node_colors.append('green')
                 else:
                     node_colors.append('red')
