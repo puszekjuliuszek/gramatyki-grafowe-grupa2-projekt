@@ -125,9 +125,7 @@ p6 = P6()
 p6.apply(g)
 draw(g, str(DRAW_DIR / "group7_1.png"))
 
-# P0 is applied to each subgraph, but should be applied only to one!
-# TODO: do soemthing about it
 p0 = P0()
-g.apply(p0)
+p0_applied = g.apply(p0)
+print(f"P0 applied: {p0_applied}")
 draw(g, str(DRAW_DIR / "group7_2.png"))
-

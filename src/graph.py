@@ -137,63 +137,59 @@ class Graph:
         if self._graph.has_node(label):
             self._graph.remove_node(label)
     
-    def apply(self, production: 'Production') -> int:
+    def apply(self, production: 'Production') -> bool:
         """
-        Applies a production to the graph.
-        
+        Applies a production to the graph once (at most).
+
         Returns:
-            Number of times the production was applied
+            True if the production was applied, False otherwise
         """
         left = production.get_left_side()
-        applied_count = 0
-        
-        while True:
-            matches = self.find_subgraph_isomorphisms(left)
-            if not matches:
+
+        matches = self.find_subgraph_isomorphisms(left)
+        if not matches:
+            return False
+
+        match = None
+        matched_graph = None
+        for candidate in matches:
+            valid = all(self._graph.has_node(graph_label) for graph_label in candidate.keys())
+            if not valid:
+                continue
+            
+            candidate_graph = Graph()
+            for graph_label, pattern_label in candidate.items():
+                node_data = self._graph.nodes[graph_label]
+                candidate_graph._graph.add_node(pattern_label, **node_data)
+                if not node_data.get('is_hyper', False):
+                    candidate_graph._nodes[pattern_label] = node_data['node']
+                else:
+                    candidate_graph._hyperedges[pattern_label] = node_data['hyperedge']
+
+            if production.filter_match(candidate_graph):
+                match = candidate
+                matched_graph = candidate_graph
                 break
 
-            match = None
-            matched_graph = None
-            for candidate in matches:
-                valid = all(self._graph.has_node(graph_label) for graph_label in candidate.keys())
-                if not valid:
-                    continue
+        if match is None:
+            return False
 
-                candidate_graph = Graph()
-                for graph_label, pattern_label in candidate.items():
-                    node_data = self._graph.nodes[graph_label]
-                    candidate_graph._graph.add_node(pattern_label, **node_data)
-                    if not node_data.get('is_hyper', False):
-                        candidate_graph._nodes[pattern_label] = node_data['node']
-                    else:
-                        candidate_graph._hyperedges[pattern_label] = node_data.get('hyperedge')
+        right = production.get_right_side(matched_graph)
 
-                if production.filter_match(candidate_graph):
-                    match = candidate
-                    matched_graph = candidate_graph
-                    break
+        inv_match = {v: k for k, v in match.items()}
+        for label, data in left._graph.nodes(data=True):
+            if data.get('is_hyper', False):
+                graph_label = inv_match[label]
+                self.remove_node(graph_label)
 
-            if match is None:
-                break
+        for node in right.nodes:
+            if node.label not in self._nodes:
+                self.add_node(node)
 
-            right = production.get_right_side(matched_graph)
+        for edge in right.hyperedges:
+            self.add_edge(edge, check_nodes=False)
 
-            inv_match = {v: k for k, v in match.items()}
-            for label, data in left._graph.nodes(data=True):
-                if data.get('is_hyper', False):
-                    graph_label = inv_match[label]
-                    self.remove_node(graph_label)
-            
-            for node in right.nodes:
-                if node.label not in self._nodes:
-                    self.add_node(node)
-            
-            for edge in right.hyperedges:
-                self.add_edge(edge, check_nodes=False)
-            
-            applied_count += 1
-        
-        return applied_count
-    
+        return True
+
     def __repr__(self):
         return f"Graph(nodes={len(self._nodes)}, hyperedges={len(self._hyperedges)})"
