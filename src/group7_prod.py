@@ -138,19 +138,19 @@ draw_step(g, "0")
 p6 = P6()
 p6_applied = p6.apply(g)
 print(f"P6 applied: {p6_applied}")
-draw_step(g, "1")
+draw_step(g, "1_p6")
 
 # Oznacz dolny czworokąt do rozbicia (deterministycznie; patrzymy na label 'n2')
 p0 = P0()
 p0_applied = g.apply(p0, True)
 print(f"P0 applied: {p0_applied}")
-draw_step(g, "2")
+draw_step(g, "2_p0")
 
 # Oznacz krawedzie pięciokąta do rozbicia
 p7 = P7()
 p7_applied = g.apply(p7)
 print(f"P7 applied: {p7_applied}")
-draw_step(g, "3")
+draw_step(g, "3_p7")
 
 # Złam krawędzie na brzegach (dopóki się da)
 i = 0
@@ -162,7 +162,7 @@ while p4_applied:
 
     if not p4_applied:
         break
-    draw_step(g, f"4_{i+1}")
+    draw_step(g, f"4_{i+1}_p4")
     i += 1
 
 # Złam krawędzie wewnętrzne (dopóki się da)
@@ -175,32 +175,32 @@ while p3_applied:
 
     if not p3_applied:
         break
-    draw_step(g, f"5_{i+1}")
+    draw_step(g, f"5_{i+1}_p3")
     i += 1
 
 # Złam pięciokąt
 p8 = P8()
 p8_applied = g.apply(p8)
 print(f"P8 applied: {p8_applied}")
-draw_step(g, "6")
+draw_step(g, "6_p8")
 
 # Zaznacz krawędzie czworokąta do złamania
 p1 = P1()
 p1_applied = g.apply(p1)
 print(f"P1 applied: {p1_applied}")
-draw_step(g, "7")
+draw_step(g, "7_p1")
 
 # Złam krawędź brzegową czworokąta
 p4 = P4()
 p4_applied = g.apply(p4)
 print(f"P4 applied: {p4_applied}")
-draw_step(g, "8")
+draw_step(g, "8_p4")
 
 # Złam krawędź, jeśli krawedź została już złamany przez sąsiednią figurę
 p2 = P2()
 p2_applied = p2.apply(g)
 print(f"P2 applied: {p2_applied}")
-draw_step(g, "9")
+draw_step(g, "9_p2")
 
 # Złam krawędzie wewnętrzne (dopóki się da)
 i = 0
@@ -212,14 +212,14 @@ while p3_applied:
 
     if not p3_applied:
         break
-    draw_step(g, f"10_{i+1}")
+    draw_step(g, f"10_{i+1}_p3")
     i += 1
 
 # Złam czworokąt oznaczony do złamania
 p5 = P5()
 p5_applied = g.apply(p5)
 print(f"P5 applied: {p5_applied}")
-draw_step(g, "11")
+draw_step(g, "11_p5")
 
 # Co będzie w pętli (mam nadzieję, że dobrze zrozumiałem zadanie i się nie machnąłem, więc mnie sprawdźcie):
 ## Zaznacz oba czworokąty przy "punkcie, do którego łamiemy" do złamania (P0)
@@ -244,7 +244,7 @@ step_counter = 12
 for it in range(NUM_ITERS):
     print(f"\n=== LOOP ITERATION {it+1} ===")
 
-    # --- 1. Oznacz OBA czworokąty do złamania ---
+    # Zaznacz oba czworokąty do złamania
     p0 = P0()
     p0_applied_1 = g.apply(p0, True)
     print(f"P0 applied: {p0_applied_1}")
@@ -260,13 +260,14 @@ for it in range(NUM_ITERS):
     # --- 2. Rozbij pierwszy oznaczony czworokąt ---
     # =====================================================
 
+    # Zaznacz krawędzie oznaczonego czworokąta do złamania
     p1 = P1()
     p1_applied = g.apply(p1)
     print(f"P1 applied: {p1_applied}")
     draw_step(g, f"{step_counter}_p1")
     step_counter += 1
 
-    # krawędzie brzegowe
+    # Złam krawędzie brzegowe
     while True:
         p4 = P4()
         if not g.apply(p4):
@@ -274,7 +275,7 @@ for it in range(NUM_ITERS):
         draw_step(g, f"{step_counter}_p4")
         step_counter += 1
 
-    # krawędzie wewnętrzne
+    # Złam krawędzie wewnętrzne (o ile nie są złamane przez sąsiednią figurę)
     while True:
         p3 = P3()
         if not g.apply(p3):
@@ -282,6 +283,7 @@ for it in range(NUM_ITERS):
         draw_step(g, f"{step_counter}_p3")
         step_counter += 1
 
+    # Złam czworokąt
     p5 = P5()
     p5_applied = g.apply(p5)
     print(f"P5 applied: {p5_applied}")
@@ -292,13 +294,14 @@ for it in range(NUM_ITERS):
     # --- 3. Rozbij drugi oznaczony czworokąt ---
     # =====================================================
 
+    # Zaznacz krawędzie oznaczonego czworokąta do złamania
     p1 = P1()
     p1_applied = g.apply(p1)
     print(f"P1 applied: {p1_applied}")
     draw_step(g, f"{step_counter}_p1")
     step_counter += 1
 
-    # krawędzie brzegowe
+    # Złam krawędzie brzegowe
     while True:
         p4 = P4()
         if not g.apply(p4):
@@ -306,14 +309,14 @@ for it in range(NUM_ITERS):
         draw_step(g, f"{step_counter}_p4")
         step_counter += 1
 
-    # krawędzie wspólne
+    # Złam krawędź wspólną już złamaną przez sąsiednią figurę
     p2 = P2()
     p2_applied = p2.apply(g)
     print(f"P2 applied: {p2_applied}")
     draw_step(g, f"{step_counter}_p2")
     step_counter += 1
 
-    # krawędzie wewnętrzne
+    # Złam krawędzie wewnętrzne (o ile nie są złamane przez sąsiednią figurę)
     while True:
         p3 = P3()
         if not g.apply(p3):
@@ -321,6 +324,7 @@ for it in range(NUM_ITERS):
         draw_step(g, f"{step_counter}_p3")
         step_counter += 1
 
+    # Złam czworokąt
     p5 = P5()
     p5_applied = g.apply(p5)
     print(f"P5 applied (quad B): {p5_applied}")
