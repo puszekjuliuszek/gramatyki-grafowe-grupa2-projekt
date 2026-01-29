@@ -1,82 +1,88 @@
+from edge import HyperEdge
 from graph import Graph
 from node import Node
-from edge import HyperEdge
-import math
+from productions.production import Production
 
-class P2:
-    def apply(self, graph: Graph):
+
+@Production.register
+class P2(Production):
+    """
+    Production P2 – Break internal edge using an existing hanging node.
+
+    Breaks an E edge with r=1, b=0 if a node exists exactly at its midpoint.
+    The edge is replaced by two E edges with r=0.
+    """
+
+    def get_left_side(self) -> Graph:
         """
-        Wykonuje produkcję P2 na podanym grafie.
-        Zwraca True, jeśli produkcja została zastosowana, False w przeciwnym razie.
+        Left side:
+        - v1 ---E(r=1,b=0)--- v2
+        - hanging node h at the midpoint (not connected by edges)
         """
-        candidates = self._find_applicable_nodes(graph)
-        
-        if not candidates:
+        g = Graph()
+
+        v1 = Node(0, 0, "v1")
+        v2 = Node(2, 0, "v2")
+        h  = Node(1, 0, "h")  # midpoint
+
+        g.add_node(v1)
+        g.add_node(v2)
+        g.add_node(h)
+
+        g.add_edge(HyperEdge((v1, v2), "E", r=1, b=0))
+
+        return g
+
+    def get_right_side(self, left: Graph) -> Graph:
+        """
+        Right side:
+        - v1 ---E(r=0)--- h ---E(r=0)--- v2
+        """
+        g = Graph()
+
+        # Extract nodes
+        v1 = left.get_node("v1")
+        v2 = left.get_node("v2")
+        h  = left.get_node("h")
+
+        # Original edge (to preserve b)
+        edge = next(e for e in left.hyperedges if e.hypertag == "E")
+        b_val = edge.b
+
+        # Add nodes
+        for n in (v1, v2, h):
+            g.add_node(n)
+
+        # Add new edges
+        g.add_edge(HyperEdge((v1, h), "E", r=0, b=b_val), check_nodes=False)
+        g.add_edge(HyperEdge((h, v2), "E", r=0, b=b_val), check_nodes=False)
+
+        return g
+
+    def filter_match(self, matched_graph: Graph) -> bool:
+        """
+        Conditions:
+        - exactly one E edge
+        - E has r=1 and b=0
+        - one extra node exists at the geometric midpoint
+        """
+        e_edges = [e for e in matched_graph.hyperedges if e.hypertag == "E"]
+        if len(e_edges) != 1:
             return False
 
-        # Aplikujemy zmiany dla wszystkich znalezionych kandydatów
-        for edge, v1, v2, h_node in candidates:
-            print(f"Applying P2: Breaking edge {edge.label} at hanging node {h_node.label}")
-            
-            # Zapamiętujemy stary atrybut B i R (chociaż R ustawiamy na 0)
-            old_b = edge.b
-            
-            # 1. Usuwamy starą hiperkrawędź
-            # W Twoim graph.py usuwanie hiperkrawędzi odbywa się przez remove_node podając label
-            graph.remove_node(edge.label)
-            
-            # 2. Tworzymy dwie nowe hiperkrawędzie
-            # Pierwsza: v1 <-> h_node
-            # Zakładam, że konstruktor HyperEdge przyjmuje (nodes, hypertag, r, b)
-            new_edge1 = HyperEdge([v1, h_node], hypertag="E", r=0, b=old_b)
-            
-            # Druga: h_node <-> v2
-            new_edge2 = HyperEdge([h_node, v2], hypertag="E", r=0, b=old_b)
-            
-            # Dodajemy do grafu (check_nodes=False, bo węzły już są w grafie)
-            graph.add_edge(new_edge1, check_nodes=False)
-            graph.add_edge(new_edge2, check_nodes=False)
-            
-        return True
+        edge = e_edges[0]
+        if edge.r != 1 or edge.b != 0:
+            return False
 
-    def _find_applicable_nodes(self, graph: Graph):
-        candidates = []
-        # Używamy graph.hyperedges (property zdefiniowane w graph.py), a nie graph.edges
-        for edge in graph.hyperedges:
-            # Warunek 1: Typ E, R=1, B=0
-            # Sprawdzamy atrybuty obiektu HyperEdge
-            if edge.hypertag == 'E' and edge.r == 1 and edge.b == 0:
-                if len(edge.nodes) != 2:
-                    continue
-                
-                v1, v2 = edge.nodes[0], edge.nodes[1]
-                
-                # Warunek 2: Sprawdzamy geometrię - czy istnieje wiszący węzeł w środku?
-                hanging_node = self._find_hanging_node_between(graph, v1, v2)
-                
-                if hanging_node:
-                    candidates.append((edge, v1, v2, hanging_node))
-        return candidates
+        v1, v2 = edge.nodes
+        mid_x = (v1.x + v2.x) / 2
+        mid_y = (v1.y + v2.y) / 2
+        eps = 1e-5
 
-    def _find_hanging_node_between(self, graph: Graph, v1: Node, v2: Node):
-        """
-        Szuka węzła, który leży geometrycznie w połowie odległości między v1 a v2.
-        """
-        mid_x = (v1.x + v2.x) / 2.0
-        mid_y = (v1.y + v2.y) / 2.0
-        epsilon = 1e-5 
-
-        # Iterujemy po graph.nodes (property zwracające listę Node)
-        for node in graph.nodes:
-            # Pomijamy same końce krawędzi
-            if node == v1 or node == v2:
+        for node in matched_graph.nodes:
+            if node in (v1, v2):
                 continue
-            
-            # Sprawdzamy czy to nie jest węzeł reprezentujący hiperkrawędź (jeśli takie są w liście nodes)
-            # W Twoim graph.py property 'nodes' zwraca tylko self._nodes.values(), 
-            # czyli zwykłe wierzchołki, więc jest OK.
-            
-            if abs(node.x - mid_x) < epsilon and abs(node.y - mid_y) < epsilon:
-                return node
-                
-        return None
+            if abs(node.x - mid_x) < eps and abs(node.y - mid_y) < eps:
+                return True
+
+        return False

@@ -198,7 +198,7 @@ draw_step(g, "8_p4")
 
 # Złam krawędź, jeśli krawedź została już złamany przez sąsiednią figurę
 p2 = P2()
-p2_applied = p2.apply(g)
+p2_applied = g.apply(p2)
 print(f"P2 applied: {p2_applied}")
 draw_step(g, "9_p2")
 
@@ -311,7 +311,7 @@ for it in range(NUM_ITERS):
 
     # Złam krawędź wspólną już złamaną przez sąsiednią figurę
     p2 = P2()
-    p2_applied = p2.apply(g)
+    p2_applied = g.apply(p2)
     print(f"P2 applied: {p2_applied}")
     draw_step(g, f"{step_counter}_p2")
     step_counter += 1

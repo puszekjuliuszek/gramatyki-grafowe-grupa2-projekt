@@ -25,7 +25,7 @@ class P3(Production):
         n1, n2 = edge.nodes
 
         new_node = Node(
-            (n1.x + n2.x + 1) / 2,
+            (n1.x + n2.x) / 2,
             (n1.y + n2.y) / 2,
             ""
         )
