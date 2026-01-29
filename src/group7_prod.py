@@ -5,15 +5,17 @@ from graph import Graph
 from visualization import draw
 from productions.p0 import P0
 from productions.p1 import P1
+from productions.p2 import P2
 from productions.p3 import P3
 from productions.p4 import P4
+from productions.p5 import P5
 from productions.p6 import P6
 from productions.p7 import P7
 from productions.p8 import P8
 
 DRAW_DIR = Path(__file__).parent.parent / "draw" / "group7_prod"
 DRAW_DIR.mkdir(exist_ok=True)
-DRAW_PREFIX = "gr7"
+DRAW_PREFIX = "step"
 
 def draw_step(graph: Graph, step: str) -> None:
     draw(graph, str(DRAW_DIR / f"{DRAW_PREFIX}_{step}.png"))
@@ -189,3 +191,45 @@ p1 = P1()
 p1_applied = g.apply(p1)
 print(f"P1 applied: {p1_applied}")
 draw_step(g, "7")
+
+# Złam krawędź brzegową czworokąta
+p4 = P4()
+p4_applied = g.apply(p4)
+print(f"P4 applied: {p4_applied}")
+draw_step(g, "8")
+
+# Złam krawędź, jeśli krawedź została już złamany przez sąsiednią figurę
+p2 = P2()
+p2_applied = p2.apply(g)
+print(f"P2 applied: {p2_applied}")
+draw_step(g, "9")
+
+# Złam krawędzie wewnętrzne (dopóki się da)
+i = 0
+p3_applied = True
+while p3_applied:
+    p3 = P3()
+    p3_applied = g.apply(p3)
+    print(f"P3 applied: {p3_applied}")
+
+    if not p3_applied:
+        break
+    draw_step(g, f"10_{i+1}")
+    i += 1
+
+# Złam czworokąt oznaczony do złamania
+p5 = P5()
+p5_applied = g.apply(p5)
+print(f"P5 applied: {p5_applied}")
+draw_step(g, "11")
+
+# Oznacz dwa czworokąty przy naszym "punkcie do którego łamiemy" do złamania
+# TODO: jakoś to zrobić deterministycznie, a nie losowo; no i żeby to były te dwa właściwe czworokąty
+p0 = P0()
+p0_applied_1 = g.apply(p0)
+print(f"P0 applied (1): {p0_applied_1}")
+draw_step(g, "12_1")
+p0_applied_2 = g.apply(p0)
+print(f"P0 applied (2): {p0_applied_2}")
+draw_step(g, "12_2")
+
