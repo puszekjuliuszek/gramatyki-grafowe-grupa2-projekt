@@ -137,7 +137,7 @@ class Graph:
         if self._graph.has_node(label):
             self._graph.remove_node(label)
     
-    def apply(self, production: 'Production') -> bool:
+    def apply(self, production: 'Production', filter_to_my_mode: bool = True) -> bool:
         """
         Applies a production to the graph once (at most).
 
@@ -147,6 +147,24 @@ class Graph:
         left = production.get_left_side()
 
         matches = self.find_subgraph_isomorphisms(left)
+
+        if filter_to_my_mode:
+            # for m in matches:
+            #     print(sorted(m.keys()))
+            #     print(sorted(m.values()))
+            #     print()
+
+            matches = [m for m in matches if "n2" in m]
+
+            # seen = set()
+            # unique_matches = []
+            # for m in matches:
+            #     key = frozenset(m.keys())
+            #     if key not in seen:
+            #         seen.add(key)
+            #         unique_matches.append(m)
+            # matches = unique_matches
+
         if not matches:
             return False
 
