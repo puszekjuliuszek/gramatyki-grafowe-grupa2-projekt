@@ -4,11 +4,17 @@ from edge import HyperEdge
 from graph import Graph
 from visualization import draw
 from productions.p0 import P0
+from productions.p3 import P3
+from productions.p4 import P4
 from productions.p6 import P6
-from productions.p9 import P9
+from productions.p7 import P7
 
 DRAW_DIR = Path(__file__).parent.parent / "draw" / "group7_prod"
 DRAW_DIR.mkdir(exist_ok=True)
+DRAW_PREFIX = "gr7"
+
+def draw_step(graph: Graph, step: str) -> None:
+    draw(graph, str(DRAW_DIR / f"{DRAW_PREFIX}_{step}.png"))
 
 g = Graph()
 
@@ -36,7 +42,8 @@ for i in range(len(outer)):
         HyperEdge(
             (outer[i], outer[(i + 1) % len(outer)]),
             "E",
-            r=0
+            r=0,
+            b=1
         )
     )
 
@@ -119,13 +126,52 @@ g.add_edge(
 # -----------------
 # Draw
 # -----------------
-draw(g, str(DRAW_DIR / "group7_0.png"))
 
+# Graf początkowy
+draw_step(g, "0")
+
+# Oznacz pięciokąt do rozbicia
 p6 = P6()
-p6.apply(g)
-draw(g, str(DRAW_DIR / "group7_1.png"))
+p6_applied = p6.apply(g)
+print(f"P6 applied: {p6_applied}")
+draw_step(g, "1")
 
+# Oznacz dolny czworokąt do rozbicia
+# TODO: to musi się aplikować deterministycznie do dolnego czworokąta, nie do górnego
 p0 = P0()
 p0_applied = g.apply(p0)
 print(f"P0 applied: {p0_applied}")
-draw(g, str(DRAW_DIR / "group7_2.png"))
+draw_step(g, "2")
+
+# Oznacz krawedzie pięciokąta do rozbicia
+p7 = P7()
+p7_applied = g.apply(p7)
+print(f"P7 applied: {p7_applied}")
+draw_step(g, "3")
+
+# Złam krawędzie na brzegach (dopóki się da)
+i = 0
+p4_applied = True
+while p4_applied:
+    p4 = P4()
+    p4_applied = g.apply(p4)
+    print(f"P4 applied: {p4_applied}")
+
+    if not p4_applied:
+        break
+    draw_step(g, f"4_{i+1}")
+    i += 1
+
+# Złam krawędzie wewnętrzne (dopóki się da)
+# TODO: łamanie krawędzie powoduje powstanie nowego wierzchołka na istniejącej krawędzi, co jest nieczytelne; poprawić to jakoś
+i = 0
+p3_applied = True
+while p3_applied:
+    p3 = P3()
+    p3_applied = g.apply(p3)
+    print(f"P3 applied: {p3_applied}")
+
+    if not p3_applied:
+        break
+    draw_step(g, f"5_{i+1}")
+    i += 1
