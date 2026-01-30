@@ -352,6 +352,10 @@ def run_derivation():
     consecutive_no_match = 0
     MAX_CONSECUTIVE_NO_MATCH = 3  # Stop after 3 consecutive iterations with no matches
     
+    # Track recently split quads to avoid splitting the same quad again
+    recently_split_quads = set()  # Set of frozensets of corner labels (original quad corners)
+    recently_created_centers = set()  # Set of center vertex labels created during splits
+    
     for iteration in range(NUM_ITERATIONS):
         applied_any = False
         
@@ -474,6 +478,18 @@ def run_derivation():
                     corner_nodes = [g.get_node(pattern_to_graph[p]) for p in ("n1", "n2", "n3", "n4")]
                     corner_nodes = [n for n in corner_nodes if n and n.hyperref is None]
                     if len(corner_nodes) == 4:
+                        # Check if this quad was recently split - exclude it
+                        match_corners = frozenset({pattern_to_graph[p] for p in ("n1", "n2", "n3", "n4") if p in pattern_to_graph})
+                        if match_corners in recently_split_quads:
+                            continue  # Skip recently split quads
+                        
+                        # Also exclude quads that contain recently created center vertices
+                        # (these are the 4 new quads created by P5 from the split)
+                        graph_labels = list(pattern_to_graph.values())
+                        has_recent_center = any(str(gl) in recently_created_centers for gl in graph_labels)
+                        if has_recent_center:
+                            continue  # Skip quads that are descendants of recently split quads
+                        
                         cx = sum(n.x for n in corner_nodes) / 4
                         cy = sum(n.y for n in corner_nodes) / 4
                         # Right hex bottom-center region: STRICTLY filter for bottom-center (x 6.5-8.5, y <= 2.5)
@@ -546,6 +562,12 @@ def run_derivation():
                             _apply_split_to_quad(g, pattern_to_graph, p1, p3, p4, p5)
                             save_both(g, f"{step:03d}_split_hex_bottom", f"Split hex bottom (iter {iteration+1})")
                             step += 1
+                            # Mark the original quad (before split) as recently split to avoid selecting it again
+                            # Use hex_corner_labels which was captured before P0 was applied
+                            recently_split_quads.add(frozenset(hex_corner_labels))
+                            # Also track the center vertex that was created (P5 creates V_{sorted_corner_labels})
+                            center_label = f"V_{'_'.join(sorted(hex_corner_labels))}"
+                            recently_created_centers.add(center_label)
                             break
         
         if not applied_any:
