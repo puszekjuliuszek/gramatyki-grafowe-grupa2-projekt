@@ -155,13 +155,21 @@ def _apply_split_to_quad(g, match_quad, p1, p3, p4, p5):
         return False
     
     # Map each edge to its midpoint
+    # After P3/P4, each edge should have exactly one midpoint node that:
+    # 1. Is connected to both endpoints
+    # 2. Is geometrically close to the midpoint of the edge
     edge_to_midpoint = {}
     for (a, b) in quad_edge_pairs:
         node_a = g.get_node(a)
         node_b = g.get_node(b)
         if not node_a or not node_b:
             continue
-        # Find midpoint on this edge: node connected to both a and b
+        
+        # Expected midpoint position
+        expected_mid_x = (node_a.x + node_b.x) / 2.0
+        expected_mid_y = (node_a.y + node_b.y) / 2.0
+        
+        # Find nodes connected to both a and b
         nodes_to_a = set()
         nodes_to_b = set()
         for e in g.hyperedges:
@@ -175,19 +183,44 @@ def _apply_split_to_quad(g, match_quad, p1, p3, p4, p5):
                     other = n2 if n1 == node_b else n1
                     if other != node_b and other not in corner_nodes:
                         nodes_to_b.add(other)
+        
+        # Find midpoint: connected to both AND geometrically close to expected midpoint
         midpoints_on_edge = nodes_to_a & nodes_to_b
         if midpoints_on_edge:
-            mp = list(midpoints_on_edge)[0]
-            edge_to_midpoint[(a, b)] = mp
-            edge_to_midpoint[(b, a)] = mp
+            # If multiple candidates, choose the one closest to the expected midpoint
+            best_mp = None
+            best_dist = float('inf')
+            for mp in midpoints_on_edge:
+                dist = ((mp.x - expected_mid_x)**2 + (mp.y - expected_mid_y)**2)**0.5
+                if dist < best_dist:
+                    best_dist = dist
+                    best_mp = mp
+            
+            if best_mp:
+                edge_to_midpoint[(a, b)] = best_mp
+                edge_to_midpoint[(b, a)] = best_mp
     
     if len(set(edge_to_midpoint.values())) != 4:
         return False
     
     # Reorder the match to ensure correct geometric correspondence
-    # Use corner_order from Q hyperedge
-    if len(corner_order) != 4:
+    # Sort corners by angle from centroid to ensure proper cyclic order
+    import math
+    if len(corner_nodes) != 4:
         return False
+    
+    # Calculate centroid
+    centroid_x = sum(n.x for n in corner_nodes) / 4.0
+    centroid_y = sum(n.y for n in corner_nodes) / 4.0
+    
+    # Sort corners by angle from centroid (ensures cyclic order)
+    def angle_from_centroid(node):
+        dx = node.x - centroid_x
+        dy = node.y - centroid_y
+        return math.atan2(dy, dx)
+    
+    sorted_corners = sorted(corner_nodes, key=angle_from_centroid)
+    corner_order = [n.label for n in sorted_corners]
     
     n1_label = corner_order[0]
     n2_label = corner_order[1]
