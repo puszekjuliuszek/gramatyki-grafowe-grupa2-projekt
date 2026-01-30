@@ -62,7 +62,7 @@ class P1(Production):
         g.add_edge(HyperEdge((n3, n4), "E"))
         g.add_edge(HyperEdge((n4, n1), "E"))
 
-        g.add_edge(HyperEdge((n1, n2, n3, n4), "Q"))
+        g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
 
         return g
 
@@ -88,6 +88,9 @@ class P1(Production):
 
     def filter_match(self, matched_graph: Graph) -> bool:
         """Only match if there is at least one E edge with r!=1."""
+        for edge in matched_graph.hyperedges:
+            if edge.hypertag == "Q" and edge.r != 1:
+                return False
         for edge in matched_graph.hyperedges:
             if edge.hypertag == "E" and edge.r != 1:
                 return True

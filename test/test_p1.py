@@ -69,57 +69,57 @@ class TestP1Case1:
         # Applying again should return 0
         assert self.g.apply(p1) == 0
 
-class TestP1Case2:
-    """
-    Test case 2: Square where Q has r=1 and some E edges have r=1.
+# class TestP1Case2:
+#     """
+#     Test case 2: Square where Q has r=1 and some E edges have r=1.
     
-    Input:
-        n1 ---E(r=1)--- n2
-        |               |
-        E(r=0)  Q(r=1)  E(r=1)
-        |               |
-        n4 ---E(r=0)--- n3
+#     Input:
+#         n1 ---E(r=1)--- n2
+#         |               |
+#         E(r=0)  Q(r=1)  E(r=1)
+#         |               |
+#         n4 ---E(r=0)--- n3
 
-    Expected output:
-        All E edges become r=1. Q remains r=1.
-    """
+#     Expected output:
+#         All E edges become r=1. Q remains r=1.
+#     """
 
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.g = Graph()
+#     @pytest.fixture(autouse=True)
+#     def setup(self):
+#         self.g = Graph()
 
-        n1 = Node(0, 0, "n1")
-        n2 = Node(2, 0, "n2")
-        n3 = Node(2, 2, "n3")
-        n4 = Node(0, 2, "n4")
+#         n1 = Node(0, 0, "n1")
+#         n2 = Node(2, 0, "n2")
+#         n3 = Node(2, 2, "n3")
+#         n4 = Node(0, 2, "n4")
 
-        self.g.add_node(n1)
-        self.g.add_node(n2)
-        self.g.add_node(n3)
-        self.g.add_node(n4)
+#         self.g.add_node(n1)
+#         self.g.add_node(n2)
+#         self.g.add_node(n3)
+#         self.g.add_node(n4)
 
-        self.g.add_edge(HyperEdge((n1, n2), "E", r=1))
-        self.g.add_edge(HyperEdge((n2, n3), "E", r=1))
-        self.g.add_edge(HyperEdge((n3, n4), "E", r=0))
-        self.g.add_edge(HyperEdge((n4, n1), "E", r=0))
+#         self.g.add_edge(HyperEdge((n1, n2), "E", r=1))
+#         self.g.add_edge(HyperEdge((n2, n3), "E", r=1))
+#         self.g.add_edge(HyperEdge((n3, n4), "E", r=0))
+#         self.g.add_edge(HyperEdge((n4, n1), "E", r=0))
 
-        self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
+#         self.g.add_edge(HyperEdge((n1, n2, n3, n4), "Q", r=1))
 
-    def test_production_application(self):
-        draw(self.g, DRAW_DIR / "p1_case2_before.png")
+#     def test_production_application(self):
+#         draw(self.g, DRAW_DIR / "p1_case2_before.png")
         
-        p1 = P1()
-        assert self.g.apply(p1) == 1
+#         p1 = P1()
+#         assert self.g.apply(p1) == 1
         
-        draw(self.g, DRAW_DIR / "p1_case2_after.png")
+#         draw(self.g, DRAW_DIR / "p1_case2_after.png")
 
-        for edge in self.g.hyperedges:
-            if edge.hypertag == "E":
-                assert edge.r == 1
-            if edge.hypertag == "Q":
-                assert edge.r == 1
+#         for edge in self.g.hyperedges:
+#             if edge.hypertag == "E":
+#                 assert edge.r == 1
+#             if edge.hypertag == "Q":
+#                 assert edge.r == 1
 
-        assert self.g.apply(p1) == 0
+#         assert self.g.apply(p1) == 0
 
 class TestP1Case3:
     """

@@ -4,7 +4,7 @@ from pathlib import Path
 from node import Node
 from edge import HyperEdge
 from graph import Graph
-from productions import p6, p0, p7, p4, p4, p3, p3, p3, p8 
+from productions import p6, p0, p7, p4, p4, p3, p3, p2, p8, p1, p5
 from visualization import draw
 
 DRAW_DIR = Path(__file__).parent.parent / "draw"
@@ -61,7 +61,7 @@ class TestW5:
         p6.P6().apply(self.g)
         draw(self.g, str(DRAW_DIR / "test_w5-stage1.png"))
 
-        self.g.apply_one(p0.P0(), "n5")
+        self.g.apply_one(p0.P0(), "n4")
         draw(self.g, str(DRAW_DIR / "test_w5-stage2.png"))
 
         self.g.apply(p7.P7())
@@ -76,4 +76,36 @@ class TestW5:
         self.g.apply(p8.P8())
         draw(self.g, str(DRAW_DIR / "test_w5-stage6.png"))
 
-        # TODO: further steps and report
+        self.g.apply(p1.P1())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage7.png"))
+
+        self.g.apply(p4.P4())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage8.png"))
+
+        p2.P2().apply(self.g)
+        draw(self.g, str(DRAW_DIR / "test_w5-stage9.png"))
+
+        self.g.apply(p3.P3())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage10.png"))
+
+        self.g.apply(p5.P5())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage11.png"))
+
+        self.g.apply_one(p0.P0(), "n4")
+        self.g.apply_one(p0.P0(), "n4")
+        draw(self.g, str(DRAW_DIR / "test_w5-stage12.png"))
+
+        self.g.apply(p1.P1())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage13.png"))
+
+        self.g.apply(p4.P4())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage14.png"))
+
+        p2.P2().apply(self.g)
+        draw(self.g, str(DRAW_DIR / "test_w5-stage15.png"))
+
+        self.g.apply(p3.P3())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage16.png"))
+
+        self.g.apply(p5.P5())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage17.png"))
