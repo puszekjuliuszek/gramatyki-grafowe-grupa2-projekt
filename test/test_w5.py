@@ -95,17 +95,29 @@ class TestW5:
         self.g.apply_one(p0.P0(), "n4")
         draw(self.g, str(DRAW_DIR / "test_w5-stage12.png"))
 
-        self.g.apply(p1.P1())
+        self.g.apply_one(p1.P1(), "n4")
         draw(self.g, str(DRAW_DIR / "test_w5-stage13.png"))
 
         self.g.apply(p4.P4())
         draw(self.g, str(DRAW_DIR / "test_w5-stage14.png"))
 
-        p2.P2().apply(self.g)
+        self.g.apply(p3.P3())
         draw(self.g, str(DRAW_DIR / "test_w5-stage15.png"))
 
-        self.g.apply(p3.P3())
+        self.g.apply(p5.P5())
         draw(self.g, str(DRAW_DIR / "test_w5-stage16.png"))
 
-        self.g.apply(p5.P5())
+        self.g.apply(p1.P1())
         draw(self.g, str(DRAW_DIR / "test_w5-stage17.png"))
+
+        self.g.apply(p4.P4())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage18.png"))
+
+        p2.P2().apply(self.g)
+        draw(self.g, str(DRAW_DIR / "test_w5-stage19.png"))
+
+        self.g.apply(p3.P3())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage20.png"))
+
+        self.g.apply(p5.P5())
+        draw(self.g, str(DRAW_DIR / "test_w5-stage21.png"))
