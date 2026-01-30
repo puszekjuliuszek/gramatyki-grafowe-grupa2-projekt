@@ -128,16 +128,123 @@ def _apply_split_to_quad(g, match_quad, p1, p3, p4, p5):
     for (a, b) in internal_edges:
         g.apply_one(p3, a, b)
     
-    # Apply P5 - ensure we match the correct quad
-    # P5's filter_match ensures exactly 8 nodes (4 corners + 4 midpoints), so it should only match our quad
-    # Use apply_one with a corner to target the specific quad
-    # Note: P5's isomorphism may assign pattern labels arbitrarily, but P5's get_right_side assumes
-    # n5 on n1-n2, n6 on n2-n3, n7 on n3-n4, n8 on n4-n1. If the assignment is wrong, the center
-    # will connect to wrong midpoints. Since we can't modify P5, we rely on the isomorphism
-    # working correctly (which it should if the graph structure matches P5's pattern exactly).
-    if corner_order:
-        return g.apply_one(p5, corner_order[0])
-    return False
+    # Apply P5 - find a complete match, then reorder it for correct geometric correspondence
+    # P5's get_right_side assumes: n5 on n1-n2, n6 on n2-n3, n7 on n3-n4, n8 on n4-n1
+    p5_left = p5.get_left_side()
+    all_p5_matches = g.find_subgraph_isomorphisms(p5_left)
+    
+    if not all_p5_matches:
+        return False
+    
+    # Find a match that has our 4 corners
+    base_match = None
+    for match in all_p5_matches:
+        # Convert to pattern->graph format
+        if "n1" in match:
+            pattern_to_graph = dict(match)
+        else:
+            pattern_to_graph = {v: k for k, v in match.items()}
+        
+        # Check if this match has our 4 corners
+        match_corners = {pattern_to_graph.get(p) for p in ("n1", "n2", "n3", "n4") if p in pattern_to_graph}
+        if match_corners == corners:
+            base_match = pattern_to_graph
+            break
+    
+    if not base_match:
+        return False
+    
+    # Map each edge to its midpoint
+    edge_to_midpoint = {}
+    for (a, b) in quad_edge_pairs:
+        node_a = g.get_node(a)
+        node_b = g.get_node(b)
+        if not node_a or not node_b:
+            continue
+        # Find midpoint on this edge: node connected to both a and b
+        nodes_to_a = set()
+        nodes_to_b = set()
+        for e in g.hyperedges:
+            if e.hypertag == "E" and len(e.nodes) == 2:
+                n1, n2 = e.nodes
+                if n1 == node_a or n2 == node_a:
+                    other = n2 if n1 == node_a else n1
+                    if other != node_a and other not in corner_nodes:
+                        nodes_to_a.add(other)
+                if n1 == node_b or n2 == node_b:
+                    other = n2 if n1 == node_b else n1
+                    if other != node_b and other not in corner_nodes:
+                        nodes_to_b.add(other)
+        midpoints_on_edge = nodes_to_a & nodes_to_b
+        if midpoints_on_edge:
+            mp = list(midpoints_on_edge)[0]
+            edge_to_midpoint[(a, b)] = mp
+            edge_to_midpoint[(b, a)] = mp
+    
+    if len(set(edge_to_midpoint.values())) != 4:
+        return False
+    
+    # Reorder the match to ensure correct geometric correspondence
+    # Use corner_order from Q hyperedge
+    if len(corner_order) != 4:
+        return False
+    
+    n1_label = corner_order[0]
+    n2_label = corner_order[1]
+    n3_label = corner_order[2]
+    n4_label = corner_order[3]
+    
+    # Find correct midpoints
+    mp_n1_n2 = edge_to_midpoint.get((n1_label, n2_label))
+    mp_n2_n3 = edge_to_midpoint.get((n2_label, n3_label))
+    mp_n3_n4 = edge_to_midpoint.get((n3_label, n4_label))
+    mp_n4_n1 = edge_to_midpoint.get((n4_label, n1_label))
+    
+    if not all([mp_n1_n2, mp_n2_n3, mp_n3_n4, mp_n4_n1]):
+        return False
+    
+    # Build reordered match: start with base_match and update corner/midpoint mappings
+    pattern_to_graph_match = dict(base_match)  # Copy all mappings including E edges and Q
+    
+    # Update corner mappings
+    pattern_to_graph_match["n1"] = n1_label
+    pattern_to_graph_match["n2"] = n2_label
+    pattern_to_graph_match["n3"] = n3_label
+    pattern_to_graph_match["n4"] = n4_label
+    
+    # Update midpoint mappings
+    pattern_to_graph_match["n5"] = mp_n1_n2.label
+    pattern_to_graph_match["n6"] = mp_n2_n3.label
+    pattern_to_graph_match["n7"] = mp_n3_n4.label
+    pattern_to_graph_match["n8"] = mp_n4_n1.label
+    
+    # Update E hyperedge mappings based on new node mappings
+    # P5 pattern has E edges: (n1,n5), (n5,n2), (n2,n6), (n6,n3), (n3,n7), (n7,n4), (n4,n8), (n8,n1)
+    # The pattern labels are: E_n1_n5, E_n5_n2, E_n2_n6, E_n6_n3, E_n3_n7, E_n7_n4, E_n4_n8, E_n8_n1
+    # Find the graph E edges that connect these nodes (order matters for label)
+    e_mappings = [
+        ("E_n1_n5", n1_label, mp_n1_n2.label),
+        ("E_n5_n2", mp_n1_n2.label, n2_label),
+        ("E_n2_n6", n2_label, mp_n2_n3.label),
+        ("E_n6_n3", mp_n2_n3.label, n3_label),
+        ("E_n3_n7", n3_label, mp_n3_n4.label),
+        ("E_n7_n4", mp_n3_n4.label, n4_label),
+        ("E_n4_n8", n4_label, mp_n4_n1.label),
+        ("E_n8_n1", mp_n4_n1.label, n1_label)
+    ]
+    
+    for pattern_e_label, node1_label, node2_label in e_mappings:
+        # Find the E hyperedge connecting these two nodes
+        for e in g.hyperedges:
+            if e.hypertag == "E" and len(e.nodes) == 2:
+                n1, n2 = e.nodes
+                # Check if this edge connects the two nodes (order-independent)
+                if {n1.label, n2.label} == {node1_label, node2_label}:
+                    pattern_to_graph_match[pattern_e_label] = e.label
+                    break
+    
+    # Use apply_one_at_match with reordered match
+    return g.apply_one_at_match(p5, pattern_to_graph_match)
 
 
 def run_derivation():
@@ -242,11 +349,13 @@ def run_derivation():
     # Corner iterations: alternate between breaking bottom-right trapez and hex bottom
     # Break bottom-right corner of trapez AND bottom-center of hex interchangeably
     NUM_ITERATIONS = 10  # Reduced to prevent excessive generation
+    consecutive_no_match = 0
+    MAX_CONSECUTIVE_NO_MATCH = 3  # Stop after 3 consecutive iterations with no matches
     
     for iteration in range(NUM_ITERATIONS):
         applied_any = False
         
-        # 1. Try to break bottom-right corner of trapez (x >= 6, y <= 3)
+        # 1. FIRST PRIORITY: Try to break bottom trapezoid (simple quads, no center/V_, bottom-most)
         # Get all P0 matches and filter by geometry
         left = p0.get_left_side()
         all_matches = g.find_subgraph_isomorphisms(left)
@@ -260,6 +369,12 @@ def run_derivation():
             
             if not all(p in pattern_to_graph for p in ("n1", "n2", "n3", "n4")):
                 continue
+            
+            # Exclude hex quads (those with center/V_ nodes) - we want simple trapezoid quads
+            graph_labels = list(pattern_to_graph.values())
+            has_center = any("V_" in str(gl) or "center" in str(gl) for gl in graph_labels)
+            if has_center:
+                continue  # Skip hex quads, only process simple trapezoid quads
             
             # Build candidate for filter_match
             candidate = Graph()
@@ -279,12 +394,13 @@ def run_derivation():
                     if len(corner_nodes) == 4:
                         cx = sum(n.x for n in corner_nodes) / 4
                         cy = sum(n.y for n in corner_nodes) / 4
-                        # Bottom-right region: x >= 6, y <= 3
-                        if cx >= 6.0 and cy <= 3.0:
-                            trap_matches.append((cy, -cx, pattern_to_graph))  # Sort by bottom-right
+                        # Bottom trapezoid: prioritize bottom-most (y closest to 0)
+                        # The bottom trapezoid is at y around 0-1.5
+                        if cy <= 3.0:  # Any bottom quad
+                            trap_matches.append((cy, -cx, pattern_to_graph))  # Sort by bottom (lowest y), then right (largest x)
         
         if trap_matches:
-            trap_matches.sort(key=lambda t: t[:2], reverse=False)  # Bottom-right first: smallest y (bottom), then largest x (right)
+            trap_matches.sort(key=lambda t: t[:2], reverse=False)  # Bottom first (lowest y), then rightmost (largest x)
             match_trap0 = trap_matches[0][2]
             # Get the corner nodes before applying P0
             corner_labels = {match_trap0[p] for p in ("n1", "n2", "n3", "n4")}
@@ -325,7 +441,8 @@ def run_derivation():
                             step += 1
                             break
         
-        # 2. Try to break bottom-center of right hex (quads with center/V_ nodes, y <= 5)
+        # 2. Try to break bottom-center of right hex (quads with center/V_ nodes, x >= 6, y <= 5)
+        # The hex is on the right side, so we need to filter by x position as well
         hex_matches = []
         for match in all_matches:
             if "n1" in match:
@@ -357,13 +474,41 @@ def run_derivation():
                     corner_nodes = [g.get_node(pattern_to_graph[p]) for p in ("n1", "n2", "n3", "n4")]
                     corner_nodes = [n for n in corner_nodes if n and n.hyperref is None]
                     if len(corner_nodes) == 4:
+                        cx = sum(n.x for n in corner_nodes) / 4
                         cy = sum(n.y for n in corner_nodes) / 4
-                        if cy <= 5.0:  # Bottom region
-                            hex_matches.append((cy, pattern_to_graph))
+                        # Right hex bottom-center region: STRICTLY filter for bottom-center (x 6.5-8.5, y <= 2.5)
+                        # The target is the bottom-center of the hex, NOT the bottom-right
+                        hex_center_x = 7.5
+                        center_distance = abs(cx - hex_center_x)
+                        
+                        # Primary filter: must be in bottom-center region
+                        is_bottom_center = (6.5 <= cx <= 8.5 and cy <= 2.5)
+                        
+                        # Only consider quads in the bottom-center region
+                        if is_bottom_center:
+                            # Score: lower y is better, then closer to center x
+                            score_y = cy
+                            score_x = center_distance
+                            hex_matches.append((score_y, score_x, pattern_to_graph))
+                        # Also consider slightly wider region but with heavy penalty
+                        elif cx >= 6.0 and cy <= 3.0:
+                            # Include but heavily penalize non-center quads
+                            score_y = cy
+                            if cx > 8.5:
+                                # Bottom-right: very heavy penalty
+                                score_x = center_distance + 500
+                            elif cx < 6.5:
+                                # Bottom-left: heavy penalty
+                                score_x = center_distance + 400
+                            else:
+                                # Slightly outside y range
+                                score_x = center_distance + 300
+                            hex_matches.append((score_y, score_x, pattern_to_graph))
         
         if hex_matches:
-            hex_matches.sort(key=lambda t: t[0])  # Bottom first
-            match_hex0 = hex_matches[0][1]
+            # Sort by: bottom first (lowest y), then most centered (smallest score_x)
+            hex_matches.sort(key=lambda t: (t[0], t[1]))
+            match_hex0 = hex_matches[0][2]
             # Get the corner labels before applying P0
             hex_corner_labels = {match_hex0[p] for p in ("n1", "n2", "n3", "n4") if p in match_hex0}
             g.apply_one_at_match(p0, match_hex0)
@@ -404,8 +549,14 @@ def run_derivation():
                             break
         
         if not applied_any:
-            print(f"No more matches found after {iteration+1} iterations")
-            break
+            consecutive_no_match += 1
+            print(f"No matches found in iteration {iteration+1} (consecutive: {consecutive_no_match})")
+            if consecutive_no_match >= MAX_CONSECUTIVE_NO_MATCH:
+                print(f"Stopping after {consecutive_no_match} consecutive iterations with no matches")
+                break
+            continue
+        else:
+            consecutive_no_match = 0  # Reset counter when we find a match
 
     save_both(g, f"{step:03d}_final_graph", "Final")
     print(f"Derivation complete! Generated {step} steps.")
