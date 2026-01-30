@@ -67,138 +67,123 @@ class P5(Production):
         return g
 
     def get_right_side(self, left: Graph) -> Graph:
-        """Creates the right side: one center vertex, edges only to edge midpoints."""
+        """Creates the right side transformation."""
         g = Graph()
-
-        # Get 4 corners from Q hyperedge
-        corners_set = set()
-        for edge in left.hyperedges:
-            if edge.hypertag == "Q" and len(edge.nodes) == 4:
-                corners_set = {n for n in edge.nodes}
-                break
-        if len(corners_set) != 4:
-            n1, n2, n3, n4 = left.get_node("n1"), left.get_node("n2"), left.get_node("n3"), left.get_node("n4")
-            n5, n6, n7, n8 = left.get_node("n5"), left.get_node("n6"), left.get_node("n7"), left.get_node("n8")
-            return self._build_right_side_fallback(g, left, [n1, n2, n3, n4], [n5, n6, n7, n8])
-
-        all_nodes = [node for node in left.ordered_nodes if node.hyperref is None]
-        if len(all_nodes) != 8:
-            n1, n2, n3, n4 = left.get_node("n1"), left.get_node("n2"), left.get_node("n3"), left.get_node("n4")
-            n5, n6, n7, n8 = left.get_node("n5"), left.get_node("n6"), left.get_node("n7"), left.get_node("n8")
-            return self._build_right_side_fallback(g, left, [n1, n2, n3, n4], [n5, n6, n7, n8])
-
-        node_to_neighbors = {n: [] for n in all_nodes}
-        for edge in left.hyperedges:
-            if edge.hypertag == "E" and len(edge.nodes) == 2:
-                a, b = edge.nodes
-                node_to_neighbors[a].append(b)
-                node_to_neighbors[b].append(a)
-
-        # Build 8-node cycle by following E-edges only (graph boundary order).
-        # Start at any corner; from corner pick the midpoint that is closest to edge geometric center.
-        start = next(iter(corners_set))
-        cycle = [start]
-        prev = None
-        current = start
-        for _ in range(7):
-            neighbors = node_to_neighbors[current]
-            if prev is None:
-                # At first corner: 2 neighbors are midpoints; pick the one closest to its edge's geometric center
-                mid_candidates = [n for n in neighbors if n not in corners_set]
-                if len(mid_candidates) == 2:
-                    def dist_to_edge_center(m):
-                        other = next(c for c in node_to_neighbors[m] if c != start)
-                        ex = (start.x + other.x) / 2
-                        ey = (start.y + other.y) / 2
-                        return (m.x - ex)**2 + (m.y - ey)**2
-                    nxt = min(mid_candidates, key=dist_to_edge_center)
-                else:
-                    nxt = neighbors[0] if neighbors else None
-            else:
-                nxt = neighbors[1] if neighbors[0] == prev else neighbors[0]
-            if nxt is None:
-                n1, n2, n3, n4 = left.get_node("n1"), left.get_node("n2"), left.get_node("n3"), left.get_node("n4")
-                n5, n6, n7, n8 = left.get_node("n5"), left.get_node("n6"), left.get_node("n7"), left.get_node("n8")
-                return self._build_right_side_fallback(g, left, [n1, n2, n3, n4], [n5, n6, n7, n8])
-            prev, current = current, nxt
-            cycle.append(current)
-
-        # Strict alternation: cycle[1,3,5,7] must be non-corners
-        if any(cycle[i] in corners_set for i in (1, 3, 5, 7)):
-            n1, n2, n3, n4 = left.get_node("n1"), left.get_node("n2"), left.get_node("n3"), left.get_node("n4")
-            n5, n6, n7, n8 = left.get_node("n5"), left.get_node("n6"), left.get_node("n7"), left.get_node("n8")
-            return self._build_right_side_fallback(g, left, [n1, n2, n3, n4], [n5, n6, n7, n8])
-
-        corners = [cycle[0], cycle[2], cycle[4], cycle[6]]
-
-        # For each edge (c_i, c_{i+1}), use the node that is actually on that edge (closest to edge center).
-        # If an edge has 2 nodes (split), pick the one closest to geometric midpoint of the two corners.
-        def edge_center(c_a, c_b):
-            common = set(node_to_neighbors.get(c_a, [])) & set(node_to_neighbors.get(c_b, []))
-            common = [n for n in common if n not in corners_set]
-            if not common:
-                return None
-            mid_x = (c_a.x + c_b.x) / 2
-            mid_y = (c_a.y + c_b.y) / 2
-            return min(common, key=lambda n: (n.x - mid_x)**2 + (n.y - mid_y)**2)
-
-        midpoints = []
-        for i in range(4):
-            c_i = corners[i]
-            c_next = corners[(i + 1) % 4]
-            m = edge_center(c_i, c_next)
-            if m is None:
-                midpoints = [cycle[1], cycle[3], cycle[5], cycle[7]]
-                break
-            midpoints.append(m)
-        if len(midpoints) != 4:
-            midpoints = [cycle[1], cycle[3], cycle[5], cycle[7]]
-
+        
+        # Retrieve nodes by their pattern labels
+        n1 = left.get_node("n1")
+        n2 = left.get_node("n2")
+        n3 = left.get_node("n3")
+        n4 = left.get_node("n4")
+        pattern_midpoints = [left.get_node(f"n{i}") for i in range(5, 9)]
+        
+        corners = [n1, n2, n3, n4]
+        corner_set = set(corners)
         corner_labels = "_".join(sorted(n.label for n in corners))
         v_x = sum(n.x for n in corners) / 4
         v_y = sum(n.y for n in corners) / 4
         v = Node(v_x, v_y, f"V_{corner_labels}")
-
-        for node in cycle:
-            g.add_node(node)
-        g.add_node(v)
-
-        for edge in left.hyperedges:
-            if edge.hypertag == "E":
-                g.add_edge(HyperEdge(edge.nodes, "E", r=edge.r, b=edge.b), check_nodes=False)
-
-        # Single center; edges only to the 4 edge midpoints (centers of shape's edges)
-        for mp in midpoints:
-            g.add_edge(HyperEdge((mp, v), "E", r=0, b=0), check_nodes=False)
-
+        
+        # Identify which midpoint is on which edge by checking E edges
+        # Build map: (corner1, corner2) -> midpoint on that edge
+        # A midpoint on edge c1-c2 must:
+        # 1. Connect to both c1 and c2 via E edges
+        # 2. Not be a corner itself
+        # 3. Be geometrically between c1 and c2 (or very close)
+        midpoint_map = {}
+        corner_order = [n1, n2, n3, n4]
+        
         for i in range(4):
-            c_i = corners[i]
-            m_i = midpoints[i]
-            m_prev = midpoints[(i - 1) % 4]
-            g.add_edge(HyperEdge((c_i, m_i, v, m_prev), "Q", r=0, b=0), check_nodes=False)
-
-        return g
-
-    def _build_right_side_fallback(self, g: Graph, left: Graph, corners, midpoints) -> Graph:
-        """Fallback using pattern order when geometry-based midpoint detection fails."""
-        n1, n2, n3, n4 = corners[0], corners[1], corners[2], corners[3]
-        n5, n6, n7, n8 = midpoints[0], midpoints[1], midpoints[2], midpoints[3]
-        corner_labels = "_".join(sorted(n.label for n in corners))
-        v_x = sum(n.x for n in corners) / 4
-        v_y = sum(n.y for n in corners) / 4
-        v = Node(v_x, v_y, f"V_{corner_labels}")
-        for node in corners + midpoints:
+            c1 = corner_order[i]
+            c2 = corner_order[(i + 1) % 4]
+            # Find midpoint on edge c1-c2
+            best_mp = None
+            best_score = float('inf')
+            
+            for mp in pattern_midpoints:
+                if mp in corner_set:
+                    continue
+                
+                # Check if mp connects to both c1 and c2 via E edges, and ONLY to c1 and c2
+                connects_to_c1 = False
+                connects_to_c2 = False
+                edge_count = 0  # Count total E edges connected to mp
+                connected_corners = set()  # Track ALL corners mp connects to
+                
+                for edge in left.hyperedges:
+                    if edge.hypertag == "E" and len(edge.nodes) == 2:
+                        if mp in edge.nodes:
+                            edge_count += 1
+                            # Check which corner(s) this edge connects to
+                            for corner in corners:
+                                if corner in edge.nodes:
+                                    connected_corners.add(corner)
+                                    if corner == c1:
+                                        connects_to_c1 = True
+                                    if corner == c2:
+                                        connects_to_c2 = True
+                
+                # Midpoint should connect to exactly 2 corners (c1 and c2) and no others
+                # This ensures we're using the actual midpoint created by P3/P4, not an outer corner
+                # or a node that connects to multiple corners
+                if connects_to_c1 and connects_to_c2 and len(connected_corners) == 2 and connected_corners == {c1, c2}:
+                    # Verify geometric position: midpoint should be between corners
+                    # Calculate expected midpoint position
+                    expected_x = (c1.x + c2.x) / 2
+                    expected_y = (c1.y + c2.y) / 2
+                    # Distance from expected position
+                    dist = math.sqrt((mp.x - expected_x)**2 + (mp.y - expected_y)**2)
+                    # Prefer midpoints that are closer to the expected position
+                    # and have exactly 2 E edges (one to each corner) - this is the ideal case
+                    # Penalize nodes with more edges (they might be corners or other nodes)
+                    ideal_edge_count = 2
+                    edge_penalty = abs(edge_count - ideal_edge_count) * 0.5
+                    score = dist + edge_penalty
+                    if score < best_score:
+                        best_score = score
+                        best_mp = mp
+            
+            if best_mp:
+                midpoint_map[(c1, c2)] = best_mp
+                midpoint_map[(c2, c1)] = best_mp
+        
+        # If we couldn't identify all midpoints, fall back to pattern labels
+        if len(midpoint_map) < 4:
+            midpoint_map = {
+                (n1, n2): pattern_midpoints[0], (n2, n1): pattern_midpoints[0],
+                (n2, n3): pattern_midpoints[1], (n3, n2): pattern_midpoints[1],
+                (n3, n4): pattern_midpoints[2], (n4, n3): pattern_midpoints[2],
+                (n4, n1): pattern_midpoints[3], (n1, n4): pattern_midpoints[3]
+            }
+        
+        # Add all nodes
+        for node in corners + pattern_midpoints:
             g.add_node(node)
         g.add_node(v)
+        
+        # Keep existing E hyperedges
         for edge in left.hyperedges:
             if edge.hypertag == "E":
                 g.add_edge(HyperEdge(edge.nodes, "E", r=edge.r, b=edge.b), check_nodes=False)
-        for mp in midpoints:
-            g.add_edge(HyperEdge((mp, v), "E", r=0, b=0), check_nodes=False)
-        g.add_edge(HyperEdge((n1, n5, v, n8), "Q", r=0, b=0), check_nodes=False)
-        g.add_edge(HyperEdge((n5, n2, n6, v), "Q", r=0, b=0), check_nodes=False)
-        g.add_edge(HyperEdge((v, n6, n3, n7), "Q", r=0, b=0), check_nodes=False)
-        g.add_edge(HyperEdge((n8, v, n7, n4), "Q", r=0, b=0), check_nodes=False)
+        
+        # New E hyperedges to center - use identified midpoints
+        for i in range(4):
+            c1 = corner_order[i]
+            c2 = corner_order[(i + 1) % 4]
+            mp = midpoint_map.get((c1, c2))
+            if mp and mp not in corner_set:
+                g.add_edge(HyperEdge((mp, v), "E", r=0, b=0), check_nodes=False)
+        
+        # Create 4 new Q hyperedges using identified midpoints
+        for i in range(4):
+            c1 = corner_order[i]
+            c2 = corner_order[(i + 1) % 4]
+            c_prev = corner_order[(i - 1) % 4]
+            mp1 = midpoint_map.get((c1, c2))  # Midpoint on edge c1-c2
+            mp2 = midpoint_map.get((c_prev, c1))  # Midpoint on edge c_prev-c1
+            if mp1 and mp2 and mp1 not in corner_set and mp2 not in corner_set:
+                g.add_edge(HyperEdge((c1, mp1, v, mp2), "Q", r=0, b=0), check_nodes=False)
+        
         return g
 
     def filter_match(self, matched_graph: Graph) -> bool:

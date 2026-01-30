@@ -54,7 +54,7 @@ class P9(Production):
 
         for edge in left.hyperedges:
             if edge.hypertag == "E":
-                g.add_edge(HyperEdge(edge.nodes, "E", r=edge.r, b=edge.b), check_nodes=False)
+                g.add_edge(HyperEdge(edge.nodes, "E", r=edge.r), check_nodes=False)
 
 
         g.add_edge(HyperEdge(tuple(nodes), "S", r=1), check_nodes=False)
